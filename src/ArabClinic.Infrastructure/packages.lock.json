@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net9.0": {
+      "arabclinic.application": {
+        "type": "Project",
+        "dependencies": {
+          "ArabClinic.Domain": "[1.0.0, )"
+        }
+      },
+      "arabclinic.domain": {
+        "type": "Project"
+      }
+    }
+  }
+}
