@@ -1,0 +1,6 @@
+@{ ViewData["Title"] = "Doctors"; ViewData["BodyClass"] = "doctors-page"; }
+<partial name="_PageTitle" model='("Doctors", "Meet the specialists who make coordinated, compassionate care possible.")' />
+<section class="doctors section"><div class="container"><div class="row gy-4">
+@foreach (var doctor in new[] { ("staff-1.webp", "Dr. Omar Hassan", "Cardiology", "12 years"), ("staff-2.webp", "Dr. Mariam Adel", "Pediatrics", "9 years"), ("staff-3.webp", "Dr. Youssef Nabil", "Neurology", "14 years"), ("staff-6.webp", "Dr. Salma Tarek", "Dermatology", "8 years") })
+{ <div class="col-lg-3 col-md-6"><div class="doctor-card"><div class="doctor-image"><img src="~/assets/img/health/@doctor.Item1" alt="@doctor.Item2" class="img-fluid" /></div><div class="doctor-content"><h4>@doctor.Item2</h4><span class="specialty">@doctor.Item3</span><div class="doctor-meta"><div class="experience"><i class="bi bi-award"></i><span>@doctor.Item4 experience</span></div></div><a asp-controller="Appointments" asp-action="Create" class="btn-appointment">Book appointment</a></div></div></div> }
+</div></div></section>

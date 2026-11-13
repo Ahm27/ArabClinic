@@ -1,0 +1,6 @@
+@{ ViewData["Title"] = "Departments"; ViewData["BodyClass"] = "departments-page"; }
+<partial name="_PageTitle" model='("Departments", "Specialized teams working together around every patient.")' />
+<section class="section light-background"><div class="container"><div class="row gy-4">
+@foreach (var department in new[] { ("bi-heart-pulse", "Cardiology", "Heart health, prevention, and long-term cardiac care."), ("bi-emoji-smile", "Pediatrics", "Supportive healthcare for infants, children, and teens."), ("bi-activity", "Neurology", "Assessment and care for brain and nervous system conditions."), ("bi-bandaid", "Dermatology", "Diagnosis and treatment for skin, hair, and nail health."), ("bi-gender-female", "Women's Health", "Personalized care through every stage of life."), ("bi-clipboard2-pulse", "General Medicine", "First-line diagnosis, prevention, and ongoing care.") })
+{ <div class="col-lg-4 col-md-6"><article class="department-card"><div class="department-icon"><i class="bi @department.Item1"></i></div><h3>@department.Item2</h3><p>@department.Item3</p><a asp-controller="Appointments" asp-action="Create">Book this department <i class="bi bi-arrow-right"></i></a></article></div> }
+</div></div></section>

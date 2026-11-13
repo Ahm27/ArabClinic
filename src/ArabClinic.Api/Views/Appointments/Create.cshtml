@@ -1,0 +1,12 @@
+@model AppointmentViewModel
+@{ ViewData["Title"] = "Book an appointment"; ViewData["BodyClass"] = "appointment-page"; }
+<partial name="_PageTitle" model='("Book an appointment", "Tell us what you need and the clinic team will confirm the best available time.")' />
+<section class="section"><div class="container"><div class="booking-card"><form asp-action="Create" method="post"><div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div><div class="row g-4">
+<div class="col-md-6"><label asp-for="FullName" class="form-label"></label><input asp-for="FullName" class="form-control" placeholder="Your full name" /><span asp-validation-for="FullName" class="text-danger"></span></div>
+<div class="col-md-6"><label asp-for="Phone" class="form-label"></label><input asp-for="Phone" class="form-control" placeholder="+20..." /><span asp-validation-for="Phone" class="text-danger"></span></div>
+<div class="col-md-6"><label asp-for="Email" class="form-label"></label><input asp-for="Email" class="form-control" placeholder="you@example.com" /><span asp-validation-for="Email" class="text-danger"></span></div>
+<div class="col-md-6"><label asp-for="PreferredDate" class="form-label"></label><input asp-for="PreferredDate" class="form-control" /><span asp-validation-for="PreferredDate" class="text-danger"></span></div>
+<div class="col-12"><label asp-for="Department" class="form-label"></label><select asp-for="Department" class="form-select"><option value="">Choose a department</option><option>General Medicine</option><option>Cardiology</option><option>Pediatrics</option><option>Neurology</option><option>Dermatology</option><option>Women's Health</option></select><span asp-validation-for="Department" class="text-danger"></span></div>
+<div class="col-12"><label asp-for="Notes" class="form-label"></label><textarea asp-for="Notes" class="form-control" rows="4" placeholder="Symptoms or anything the doctor should know"></textarea><span asp-validation-for="Notes" class="text-danger"></span></div>
+<div class="col-12 d-flex gap-3"><button type="submit" class="btn btn-primary btn-lg">Send appointment request</button><a asp-action="Index" class="btn btn-light btn-lg">Cancel</a></div>
+</div></form></div></div></section>

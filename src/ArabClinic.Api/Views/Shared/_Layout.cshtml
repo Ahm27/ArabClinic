@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ArabClinic</title>
+    <meta name="description" content="ArabClinic patient care and clinic management" />
+    <link rel="icon" href="~/assets/img/favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=Montserrat:wght@500;600;700;800&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/assets/vendor/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/assets/vendor/bootstrap-icons/bootstrap-icons.css" />
+    <link rel="stylesheet" href="~/assets/vendor/aos/aos.css" />
+    <link rel="stylesheet" href="~/assets/vendor/glightbox/css/glightbox.min.css" />
+    <link rel="stylesheet" href="~/assets/vendor/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="~/assets/vendor/swiper/swiper-bundle.min.css" />
+    <link rel="stylesheet" href="~/assets/css/main.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="@ViewData["BodyClass"]">
+    <header id="header" class="header fixed-top">
+        <div class="topbar d-flex align-items-center dark-background">
+            <div class="container d-flex justify-content-center justify-content-md-between">
+                <div class="contact-info d-flex align-items-center">
+                    <i class="bi bi-envelope"><a href="mailto:care@arabclinic.com">care@arabclinic.com</a></i>
+                    <i class="bi bi-phone ms-4"><span>+20 100 000 0000</span></i>
+                </div>
+                <span class="d-none d-md-inline"><i class="bi bi-clock me-1"></i> Open daily, 8:00 AM–10:00 PM</span>
+            </div>
+        </div>
+        <div class="branding d-flex align-items-center">
+            <div class="container position-relative d-flex align-items-center justify-content-between">
+                <a asp-controller="Home" asp-action="Index" class="logo d-flex align-items-center"><i class="bi bi-heart-pulse-fill brand-mark"></i><h1 class="sitename">ArabClinic</h1></a>
+                <nav id="navmenu" class="navmenu">
+                    <ul>
+                        <li><a asp-controller="Home" asp-action="Index">Home</a></li>
+                        <li><a asp-controller="Patients" asp-action="Index">Patients</a></li>
+                        <li><a asp-controller="Doctors" asp-action="Index">Doctors</a></li>
+                        <li><a asp-controller="Departments" asp-action="Index">Departments</a></li>
+                        <li><a asp-controller="Appointments" asp-action="Index">Appointments</a></li>
+                    </ul>
+                    <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+                </nav>
+            </div>
+        </div>
+    </header>
+    <main class="main">@RenderBody()</main>
+    <footer class="footer light-background">
+        <div class="container footer-top"><div class="row gy-4">
+            <div class="col-lg-5 col-md-12 footer-about"><a asp-controller="Home" asp-action="Index" class="logo d-flex align-items-center"><span class="sitename">ArabClinic</span></a><p>A simple, compassionate digital home for patients, doctors, and clinic teams.</p></div>
+            <div class="col-lg-2 col-6 footer-links"><h4>Clinic</h4><ul><li><a asp-controller="Patients" asp-action="Index">Patients</a></li><li><a asp-controller="Doctors" asp-action="Index">Doctors</a></li><li><a asp-controller="Appointments" asp-action="Index">Appointments</a></li></ul></div>
+            <div class="col-lg-4 col-6 footer-contact"><h4>Contact</h4><p>Cairo, Egypt</p><p class="mt-3"><strong>Phone:</strong> +20 100 000 0000</p><p><strong>Email:</strong> care@arabclinic.com</p></div>
+        </div></div>
+        <div class="container copyright text-center"><p>&copy; @DateTime.UtcNow.Year <strong>ArabClinic</strong>. All rights reserved.</p><div class="credits">UI adapted from <a href="https://bootstrapmade.com/" rel="noopener">BootstrapMade</a>.</div></div>
+    </footer>
+    <a href="#" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+    <script src="~/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="~/assets/vendor/aos/aos.js"></script>
+    <script src="~/assets/vendor/glightbox/js/glightbox.min.js"></script>
+    <script src="~/assets/vendor/purecounter/purecounter_vanilla.js"></script>
+    <script src="~/assets/vendor/swiper/swiper-bundle.min.js"></script>
+    <script src="~/assets/js/main.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

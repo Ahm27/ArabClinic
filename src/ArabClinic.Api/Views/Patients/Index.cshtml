@@ -1,0 +1,4 @@
+@{ ViewData["Title"] = "Patients"; ViewData["BodyClass"] = "patients-page"; }
+<partial name="_PageTitle" model='("Patients", "Find and manage patient records. Database-backed patient registration is the next implementation milestone.")' />
+<section class="section"><div class="container"><div class="workspace-toolbar"><div><h2>Patient directory</h2><p>Patient records will appear here after persistence is connected.</p></div><button class="btn btn-primary" disabled title="Available after database setup"><i class="bi bi-person-plus me-2"></i>Add patient</button></div>
+<div class="empty-state"><div class="empty-icon"><i class="bi bi-people"></i></div><h3>No patients yet</h3><p>Connect Entity Framework Core and create the patient use cases to enable this module.</p><span class="status-pill"><i class="bi bi-tools"></i> Planned next</span></div></div></section>

@@ -1,12 +1,12 @@
 # ArabClinic
 
-ArabClinic is an ASP.NET Core Web API organized with clear dependency boundaries.
+ArabClinic is a server-rendered ASP.NET Core MVC application organized with clear dependency boundaries.
 
 ## Structure
 
 ```text
 src/
-  ArabClinic.Api/             HTTP endpoints and application composition
+  ArabClinic.Api/             MVC controllers, Razor views, and application composition
   ArabClinic.Application/     Use cases and application contracts
   ArabClinic.Domain/          Entities and domain rules
   ArabClinic.Infrastructure/  Persistence and external integrations
@@ -28,8 +28,8 @@ dotnet test --configuration Release
 dotnet run --project src/ArabClinic.Api
 ```
 
-The health endpoint is available at `/health`. OpenAPI is available at
-`/openapi/v1.json` in the Development environment.
+The web application is available at the root URL. The health endpoint is
+available at `/health`.
 
 To run in a container:
 
@@ -37,7 +37,13 @@ To run in a container:
 docker compose up --build
 ```
 
-The API is then available at `http://localhost:8080`.
+The web application is then available at `http://localhost:8080`.
+
+## UI template
+
+The MVC presentation adapts the Clinic Bootstrap template by BootstrapMade to
+the ArabClinic project modules and Razor routing. The original template source
+and license notice are retained in `Clinic-v1.0.0/Readme.txt`.
 
 ## CI/CD
 
