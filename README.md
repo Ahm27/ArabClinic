@@ -31,6 +31,24 @@ dotnet run --project src/ArabClinic.Api
 The web application is available at the root URL. The health endpoint is
 available at `/health`.
 
+Patient management is backed by SQL Server through Entity Framework Core. Set
+the `ConnectionStrings:ArabClinic` value with .NET user secrets or the
+`ConnectionStrings__ArabClinic` environment variable before applying migrations.
+For example:
+
+```bash
+dotnet user-secrets set "ConnectionStrings:ArabClinic" \
+  "<your SQL Server connection string>" \
+  --project src/ArabClinic.Api
+dotnet tool restore
+dotnet ef database update \
+  --project src/ArabClinic.Infrastructure \
+  --startup-project src/ArabClinic.Api
+```
+
+Authentication and authorization have not been implemented. Patient screens
+must be protected with role-based authorization before production use.
+
 To run in a container:
 
 ```bash

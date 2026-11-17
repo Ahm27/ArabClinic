@@ -1,0 +1,309 @@
+name: Deploy to Somee
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: somee-production
+  cancel-in-progress: false
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  PUBLISH_DIR: ${{ github.workspace }}/artifacts/publish
+  SITE_BASE_URL: ${{ vars.SITE_BASE_URL || 'http://arabclinic.somee.com' }}
+
+jobs:
+  build-test-deploy:
+    name: Build, test, publish, and deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7.0.1
+
+      - name: Set up .NET 9
+        uses: actions/setup-dotnet@v6.1.0
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Restore dependencies
+        run: dotnet restore ArabClinic.sln --locked-mode
+
+      - name: Build solution
+        run: dotnet build ArabClinic.sln --configuration Release --no-restore
+
+      - name: Run tests
+        run: >-
+          dotnet test ArabClinic.sln
+          --configuration Release
+          --no-build
+          --no-restore
+          --logger "trx;LogFileName=test-results.trx"
+          --results-directory TestResults
+
+      - name: Publish MVC application
+        run: >-
+          dotnet publish src/ArabClinic.Api/ArabClinic.Api.csproj
+          --configuration Release
+          --no-build
+          --no-restore
+          --output "$PUBLISH_DIR"
+
+      - name: Remove development-only publish files
+        shell: bash
+        run: rm -f "$PUBLISH_DIR/appsettings.Development.json"
+
+      - name: Verify published IIS application
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          required_files=(
+            "$PUBLISH_DIR/web.config"
+            "$PUBLISH_DIR/ArabClinic.Api.dll"
+            "$PUBLISH_DIR/ArabClinic.Api.deps.json"
+            "$PUBLISH_DIR/ArabClinic.Api.runtimeconfig.json"
+            "$PUBLISH_DIR/wwwroot/assets/css/main.css"
+          )
+
+          for required_file in "${required_files[@]}"; do
+            if [[ ! -f "$required_file" ]]; then
+              echo "::error file=$required_file::Required publish output is missing."
+              exit 1
+            fi
+          done
+
+          if [[ ! -d "$PUBLISH_DIR/wwwroot/assets" ]]; then
+            echo "::error::Published wwwroot/assets directory is missing."
+            exit 1
+          fi
+
+          if ! grep -Eq '(^|[[:space:]])[:.#@a-zA-Z][^{]*\{' "$PUBLISH_DIR/wwwroot/assets/css/main.css"; then
+            echo "::error::Published main.css does not appear to contain CSS."
+            exit 1
+          fi
+
+          if [[ -f "$PUBLISH_DIR/appsettings.Development.json" ]]; then
+            echo "::error::Development configuration must not be deployed."
+            exit 1
+          fi
+
+          echo "Verified publish root:"
+          find "$PUBLISH_DIR" -maxdepth 2 -type f -printf '%P\n' | sort
+          du -sh "$PUBLISH_DIR"
+
+      - name: Upload rollback artifact
+        uses: actions/upload-artifact@v6.0.0
+        with:
+          name: arabclinic-publish-${{ github.sha }}
+          path: ${{ env.PUBLISH_DIR }}/
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 6
+
+      - name: Install FTP client
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends lftp
+
+      - name: Validate deployment configuration
+        shell: bash
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_SERVER_DIR: ${{ secrets.FTP_SERVER_DIR }}
+          FTP_PROTOCOL: ${{ vars.FTP_PROTOCOL || 'ftp' }}
+          FTP_PORT: ${{ vars.FTP_PORT || '21' }}
+        run: |
+          set -euo pipefail
+
+          [[ -n "$FTP_SERVER" ]] || { echo "::error::FTP_SERVER is not configured."; exit 1; }
+          [[ -n "$FTP_USERNAME" ]] || { echo "::error::FTP_USERNAME is not configured."; exit 1; }
+          [[ -n "$FTP_PASSWORD" ]] || { echo "::error::FTP_PASSWORD is not configured."; exit 1; }
+          [[ -n "$FTP_SERVER_DIR" ]] || { echo "::error::FTP_SERVER_DIR is not configured."; exit 1; }
+          [[ "$FTP_PROTOCOL" =~ ^(ftp|ftps-explicit|ftps-implicit)$ ]] || {
+            echo "::error::FTP_PROTOCOL must be ftp, ftps-explicit, or ftps-implicit."
+            exit 1
+          }
+          [[ "$FTP_PORT" =~ ^[0-9]+$ ]] || { echo "::error::FTP_PORT must be numeric."; exit 1; }
+          [[ "$FTP_SERVER_DIR" =~ ^[A-Za-z0-9_./-]+$ ]] || {
+            echo "::error::FTP_SERVER_DIR contains unsupported characters."
+            exit 1
+          }
+          [[ "$FTP_SERVER_DIR" != *".."* ]] || {
+            echo "::error::FTP_SERVER_DIR must not contain parent-directory traversal."
+            exit 1
+          }
+
+          echo "Deployment protocol: $FTP_PROTOCOL"
+          echo "Deployment port: $FTP_PORT"
+          echo "Configured remote directory: $FTP_SERVER_DIR"
+
+      - name: Deploy published output to Somee
+        shell: bash
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_SERVER_DIR: ${{ secrets.FTP_SERVER_DIR }}
+          FTP_PROTOCOL: ${{ vars.FTP_PROTOCOL || 'ftp' }}
+          FTP_PORT: ${{ vars.FTP_PORT || '21' }}
+        run: |
+          set -euo pipefail
+          set +x
+
+          case "$FTP_PROTOCOL" in
+            ftp)
+              ftp_url="ftp://$FTP_SERVER"
+              tls_commands=$'set ftp:ssl-allow false\n'
+              ;;
+            ftps-explicit)
+              ftp_url="ftp://$FTP_SERVER"
+              tls_commands=$'set ftp:ssl-force true\nset ftp:ssl-protect-data true\nset ssl:verify-certificate true\n'
+              ;;
+            ftps-implicit)
+              ftp_url="ftps://$FTP_SERVER"
+              tls_commands=$'set ftp:ssl-force true\nset ftp:ssl-protect-data true\nset ssl:verify-certificate true\n'
+              ;;
+          esac
+
+          lftp_run() {
+            local operation="$1"
+            lftp -u "$FTP_USERNAME,$FTP_PASSWORD" -p "$FTP_PORT" "$ftp_url" <<LFTP_COMMANDS
+          set cmd:fail-exit true
+          set net:max-retries 2
+          set net:timeout 20
+          set net:reconnect-interval-base 5
+          $tls_commands
+          cd "$FTP_SERVER_DIR"
+          $operation
+          bye
+          LFTP_COMMANDS
+          }
+
+          offline_uploaded=0
+          cleanup_offline() {
+            if [[ "$offline_uploaded" -eq 1 ]]; then
+              echo "Removing app_offline.htm to bring the application online."
+              lftp_run "rm -f app_offline.htm"
+              offline_uploaded=0
+            fi
+          }
+
+          cleanup_on_exit() {
+            local deployment_status=$?
+            trap - EXIT
+            if ! cleanup_offline; then
+              echo "::error::Deployment cleanup failed. Remove app_offline.htm manually from the configured FTP directory."
+              deployment_status=1
+            fi
+            exit "$deployment_status"
+          }
+          trap cleanup_on_exit EXIT
+
+          offline_file="$RUNNER_TEMP/app_offline.htm"
+          printf '%s\n' '<!doctype html><html><head><meta charset="utf-8"><title>Maintenance</title></head><body><h1>ArabClinic is being updated</h1><p>Please try again shortly.</p></body></html>' > "$offline_file"
+
+          echo "Inspecting the configured FTP directory before deployment."
+          lftp_run "pwd; cls -la"
+
+          echo "Taking the IIS application offline."
+          lftp_run "put \"$offline_file\" -o app_offline.htm"
+          offline_uploaded=1
+          sleep 3
+
+          echo "Uploading the contents of the publish directory directly to the configured IIS root."
+          lftp_run "mirror --reverse --verbose=1 --parallel=2 --exclude-glob app_offline.htm --exclude-glob appsettings.Development.json --exclude-glob appsettings.Production.json \"$PUBLISH_DIR/\" ."
+
+          cleanup_offline
+          trap - EXIT
+          echo "FTP upload completed successfully."
+
+      - name: Verify deployed health and static asset
+        shell: bash
+        env:
+          VERIFY_RETRIES: ${{ vars.DEPLOY_VERIFY_RETRIES || '12' }}
+          VERIFY_DELAY_SECONDS: ${{ vars.DEPLOY_VERIFY_DELAY_SECONDS || '10' }}
+        run: |
+          set -euo pipefail
+
+          verify_url() {
+            local url="$1"
+            local body_file="$2"
+            local headers_file="$3"
+
+            curl --silent --show-error --location \
+              --connect-timeout 10 --max-time 30 \
+              --dump-header "$headers_file" \
+              --output "$body_file" \
+              --write-out '%{http_code}' \
+              "$url" || true
+          }
+
+          health_url="${SITE_BASE_URL%/}/health"
+          css_url="${SITE_BASE_URL%/}/assets/css/main.css"
+          health_body="$RUNNER_TEMP/health-body.txt"
+          health_headers="$RUNNER_TEMP/health-headers.txt"
+          css_body="$RUNNER_TEMP/main.css"
+          css_headers="$RUNNER_TEMP/css-headers.txt"
+
+          for attempt in $(seq 1 "$VERIFY_RETRIES"); do
+            echo "Verification attempt $attempt of $VERIFY_RETRIES"
+            health_status=$(verify_url "$health_url" "$health_body" "$health_headers")
+            css_status=$(verify_url "$css_url" "$css_body" "$css_headers")
+
+            css_content_type=$(grep -i '^content-type:' "$css_headers" | tail -1 | tr -d '\r' || true)
+            css_looks_valid=false
+            if [[ "$css_status" == "200" ]] \
+              && [[ "$css_content_type" == *"text/css"* ]] \
+              && ! grep -Eiq '<!doctype html|<html[ >]' "$css_body" \
+              && grep -Eq '(^|[[:space:]])[:.#@a-zA-Z][^{]*\{' "$css_body"; then
+              css_looks_valid=true
+            fi
+
+            echo "Health status: $health_status"
+            echo "CSS status: $css_status"
+            echo "CSS content type: ${css_content_type:-missing}"
+
+            if [[ "$health_status" == "200" ]] && [[ "$css_looks_valid" == "true" ]]; then
+              echo "Deployment verification succeeded."
+              exit 0
+            fi
+
+            if [[ "$attempt" -lt "$VERIFY_RETRIES" ]]; then
+              sleep "$VERIFY_DELAY_SECONDS"
+            fi
+          done
+
+          echo "::error::Post-deployment verification failed after $VERIFY_RETRIES attempts."
+          echo "Health response headers:"
+          cat "$health_headers" || true
+          echo "Health response preview:"
+          head -c 500 "$health_body" || true
+          echo
+          echo "CSS response headers:"
+          cat "$css_headers" || true
+          echo "CSS response preview:"
+          head -c 500 "$css_body" || true
+          echo
+          exit 1
+
+      - name: Upload test results on failure
+        if: failure()
+        uses: actions/upload-artifact@v6.0.0
+        with:
+          name: failed-test-results-${{ github.sha }}
+          path: TestResults/
+          if-no-files-found: ignore
+          retention-days: 14

@@ -21,4 +21,27 @@ public sealed class PatientTests
         Assert.Throws<ArgumentException>(() =>
             new Patient(" ", new DateOnly(1990, 1, 1)));
     }
+
+    [Fact]
+    public void UpdateDetailsWithValidValuesUpdatesPatient()
+    {
+        var patient = new Patient("Ahmed Ali", new DateOnly(1990, 1, 1));
+
+        patient.UpdateDetails("  Ahmed Hassan  ", new DateOnly(1991, 2, 2));
+
+        Assert.Equal("Ahmed Hassan", patient.FullName);
+        Assert.Equal(new DateOnly(1991, 2, 2), patient.DateOfBirth);
+    }
+
+    [Fact]
+    public void UpdateDetailsWithEmptyNameThrowsWithoutChangingPatient()
+    {
+        var patient = new Patient("Ahmed Ali", new DateOnly(1990, 1, 1));
+
+        Assert.Throws<ArgumentException>(() =>
+            patient.UpdateDetails(" ", new DateOnly(1991, 2, 2)));
+
+        Assert.Equal("Ahmed Ali", patient.FullName);
+        Assert.Equal(new DateOnly(1990, 1, 1), patient.DateOfBirth);
+    }
 }

@@ -1,0 +1,4 @@
+@model PatientFormViewModel
+@{ ViewData["Title"] = "Edit patient"; ViewData["BodyClass"] = "patients-page"; }
+<partial name="_PageTitle" model='("Edit patient", "Update the patient’s core details.")' />
+<section class="section"><div class="container"><div class="booking-card"><form method="post"><div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div><partial name="_PatientForm" model="Model" /><div class="form-actions"><button type="submit" class="btn btn-primary btn-lg">Save changes</button><a asp-action="Index" class="btn btn-light btn-lg">Cancel</a></div></form></div></div></section>

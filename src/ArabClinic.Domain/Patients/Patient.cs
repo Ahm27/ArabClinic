@@ -10,11 +10,16 @@ public sealed class Patient : Entity
 
     public Patient(string fullName, DateOnly dateOfBirth)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(fullName);
-        FullName = fullName.Trim();
-        DateOfBirth = dateOfBirth;
+        UpdateDetails(fullName, dateOfBirth);
     }
 
     public string FullName { get; private set; } = string.Empty;
     public DateOnly DateOfBirth { get; private set; }
+
+    public void UpdateDetails(string fullName, DateOnly dateOfBirth)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(fullName);
+        FullName = fullName.Trim();
+        DateOfBirth = dateOfBirth;
+    }
 }
