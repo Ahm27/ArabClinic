@@ -1,0 +1,68 @@
+@{
+    ViewData["Title"] = "Our Medical Services";
+    ViewData["BodyClass"] = "services-page";
+}
+
+<div class="container py-4">
+    <div class="text-center mb-5" data-aos="fade-up">
+        <span class="badge bg-primary-subtle text-primary py-2 px-3 rounded-pill fw-medium mb-2">Clinical Services</span>
+        <h1 class="display-5 fw-bold">Comprehensive Healthcare Services</h1>
+        <p class="text-muted lead">Dedicated medical support across diagnostic, consultation, and therapeutic specialties.</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
+            <div class="card h-100 border rounded-4 p-4 shadow-sm">
+                <div class="text-primary fs-1 mb-3"><i class="bi bi-heart-pulse"></i></div>
+                <h4 class="fw-bold">Cardiology & Vascular</h4>
+                <p class="text-muted">ECG diagnostics, Holter monitoring, cardiovascular stress exams, hypertension management, and echocardiography.</p>
+                <a asp-controller="Departments" asp-action="Index" class="text-primary text-decoration-none fw-semibold">Learn more &rarr;</a>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
+            <div class="card h-100 border rounded-4 p-4 shadow-sm">
+                <div class="text-primary fs-1 mb-3"><i class="bi bi-activity"></i></div>
+                <h4 class="fw-bold">Neurology & Diagnostics</h4>
+                <p class="text-muted">Comprehensive evaluation of neurologic disorders, migraine treatments, EEG tests, and neuromuscular consultation.</p>
+                <a asp-controller="Departments" asp-action="Index" class="text-primary text-decoration-none fw-semibold">Learn more &rarr;</a>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+            <div class="card h-100 border rounded-4 p-4 shadow-sm">
+                <div class="text-primary fs-1 mb-3"><i class="bi bi-person-wheelchair"></i></div>
+                <h4 class="fw-bold">Orthopedics & Joint Care</h4>
+                <p class="text-muted">Sports injury rehab, arthroscopic assessment, bone fracture therapy, and degenerative joint pain solutions.</p>
+                <a asp-controller="Departments" asp-action="Index" class="text-primary text-decoration-none fw-semibold">Learn more &rarr;</a>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="400">
+            <div class="card h-100 border rounded-4 p-4 shadow-sm">
+                <div class="text-primary fs-1 mb-3"><i class="bi bi-emoji-smile"></i></div>
+                <h4 class="fw-bold">Pediatrics & Neonatal</h4>
+                <p class="text-muted">Comprehensive infant checkups, growth trajectory monitoring, childhood vaccinations, and pediatric acute care.</p>
+                <a asp-controller="Departments" asp-action="Index" class="text-primary text-decoration-none fw-semibold">Learn more &rarr;</a>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="500">
+            <div class="card h-100 border rounded-4 p-4 shadow-sm">
+                <div class="text-primary fs-1 mb-3"><i class="bi bi-eye"></i></div>
+                <h4 class="fw-bold">Ophthalmology & Eye Care</h4>
+                <p class="text-muted">Refraction testing, cataract diagnostics, intraocular pressure screening, and therapeutic retinal care.</p>
+                <a asp-controller="Departments" asp-action="Index" class="text-primary text-decoration-none fw-semibold">Learn more &rarr;</a>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="600">
+            <div class="card h-100 border rounded-4 p-4 shadow-sm">
+                <div class="text-primary fs-1 mb-3"><i class="bi bi-shield-plus"></i></div>
+                <h4 class="fw-bold">Dermatology & Skin Care</h4>
+                <p class="text-muted">Eczema therapy, acne solutions, cosmetic skin rejuvenation, mole monitoring, and allergy patch diagnostics.</p>
+                <a asp-controller="Departments" asp-action="Index" class="text-primary text-decoration-none fw-semibold">Learn more &rarr;</a>
+            </div>
+        </div>
+    </div>
+</div>

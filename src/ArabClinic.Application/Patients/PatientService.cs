@@ -25,7 +25,7 @@ public sealed class PatientService(IPatientRepository repository) : IPatientServ
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var patient = new Patient(request.FullName, request.DateOfBirth);
+        var patient = new Patient(request.FullName, request.DateOfBirth, request.Gender, request.Address, request.Allergies, request.MedicalHistory);
         await repository.AddAsync(patient, cancellationToken);
         await repository.SaveChangesAsync(cancellationToken);
         return patient.Id;
@@ -44,7 +44,7 @@ public sealed class PatientService(IPatientRepository repository) : IPatientServ
             return false;
         }
 
-        patient.UpdateDetails(request.FullName, request.DateOfBirth);
+        patient.UpdateFullDetails(request.FullName, request.DateOfBirth, request.Gender, request.Address, request.Allergies, request.MedicalHistory);
         await repository.SaveChangesAsync(cancellationToken);
         return true;
     }
@@ -65,5 +65,5 @@ public sealed class PatientService(IPatientRepository repository) : IPatientServ
     }
 
     private static PatientDto Map(Patient patient) =>
-        new(patient.Id, patient.FullName, patient.DateOfBirth);
+        new(patient.Id, patient.FullName, patient.DateOfBirth, patient.Gender, patient.Address, patient.Allergies, patient.MedicalHistory);
 }

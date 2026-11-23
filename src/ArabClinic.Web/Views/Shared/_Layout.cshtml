@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ArabClinic</title>
+    <meta name="description" content="ArabClinic - Modern healthcare and clinic management platform" />
+    <link rel="icon" href="~/assets/img/favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=Montserrat:wght@500;600;700;800&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/assets/vendor/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/assets/vendor/bootstrap-icons/bootstrap-icons.css" />
+    <link rel="stylesheet" href="~/assets/vendor/aos/aos.css" />
+    <link rel="stylesheet" href="~/assets/vendor/glightbox/css/glightbox.min.css" />
+    <link rel="stylesheet" href="~/assets/vendor/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="~/assets/vendor/swiper/swiper-bundle.min.css" />
+    <link rel="stylesheet" href="~/assets/css/main.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="@ViewData["BodyClass"]">
+    <header id="header" class="header fixed-top">
+        <div class="topbar d-flex align-items-center dark-background">
+            <div class="container d-flex justify-content-center justify-content-md-between">
+                <div class="contact-info d-flex align-items-center">
+                    <i class="bi bi-envelope"><a href="mailto:care@arabclinic.com">care@arabclinic.com</a></i>
+                    <i class="bi bi-phone ms-4"><span>+20 100 000 0000</span></i>
+                </div>
+                <div class="d-none d-md-flex align-items-center gap-3">
+                    <span><i class="bi bi-clock me-1"></i> Open daily, 8:00 AM–10:00 PM</span>
+                    <a asp-controller="Notifications" asp-action="Index" class="text-white text-decoration-none">
+                        <i class="bi bi-bell-fill"></i> Notifications
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="branding d-flex align-items-center">
+            <div class="container position-relative d-flex align-items-center justify-content-between">
+                <a asp-controller="Home" asp-action="Index" class="logo d-flex align-items-center">
+                    <i class="bi bi-heart-pulse-fill brand-mark me-2 text-primary fs-3"></i>
+                    <h1 class="sitename mb-0">ArabClinic</h1>
+                </a>
+                <nav id="navmenu" class="navmenu">
+                    <ul>
+                        <li><a asp-controller="Home" asp-action="Index">Home</a></li>
+                        <li><a asp-controller="Doctors" asp-action="Index">Doctors</a></li>
+                        <li><a asp-controller="Departments" asp-action="Index">Departments</a></li>
+                        <li><a asp-controller="Appointments" asp-action="Index">Appointments</a></li>
+                        <li><a asp-controller="Patients" asp-action="Index">Patients</a></li>
+                        <li><a asp-controller="Invoices" asp-action="Index">Billing</a></li>
+                        <li class="dropdown"><a href="#"><span>More</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                            <ul>
+                                <li><a asp-controller="Home" asp-action="About">About Clinic</a></li>
+                                <li><a asp-controller="Home" asp-action="Services">Services</a></li>
+                                <li><a asp-controller="Notifications" asp-action="Index">Notification Center</a></li>
+                                <li><a asp-controller="Home" asp-action="Contact">Contact & Location</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+                </nav>
+                <a asp-controller="Appointments" asp-action="Create" class="btn btn-primary d-none d-lg-inline-block rounded-pill px-4">
+                    <i class="bi bi-calendar2-plus me-1"></i> Book Appointment
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="main" style="min-height: 70vh; padding-top: 110px;">
+        @RenderBody()
+    </main>
+
+    <footer class="footer light-background mt-5">
+        <div class="container footer-top py-5">
+            <div class="row gy-4">
+                <div class="col-lg-4 col-md-6 footer-about">
+                    <a asp-controller="Home" asp-action="Index" class="logo d-flex align-items-center mb-3">
+                        <i class="bi bi-heart-pulse-fill text-primary fs-4 me-2"></i>
+                        <span class="sitename fw-bold fs-4">ArabClinic</span>
+                    </a>
+                    <p>Providing compassionate, state-of-the-art medical services. Seamless clinical scheduling, patient records, and comprehensive specialty care.</p>
+                    <div class="social-links d-flex mt-4">
+                        <a href="#!" class="btn btn-sm btn-outline-secondary rounded-circle me-2"><i class="bi bi-twitter-x"></i></a>
+                        <a href="#!" class="btn btn-sm btn-outline-secondary rounded-circle me-2"><i class="bi bi-facebook"></i></a>
+                        <a href="#!" class="btn btn-sm btn-outline-secondary rounded-circle me-2"><i class="bi bi-instagram"></i></a>
+                        <a href="#!" class="btn btn-sm btn-outline-secondary rounded-circle"><i class="bi bi-linkedin"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-6 footer-links">
+                    <h4>Clinical Care</h4>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a asp-controller="Appointments" asp-action="Index" class="text-decoration-none text-muted">Appointments</a></li>
+                        <li class="mb-2"><a asp-controller="Doctors" asp-action="Index" class="text-decoration-none text-muted">Our Doctors</a></li>
+                        <li class="mb-2"><a asp-controller="Departments" asp-action="Index" class="text-decoration-none text-muted">Departments</a></li>
+                        <li class="mb-2"><a asp-controller="Patients" asp-action="Index" class="text-decoration-none text-muted">Patient Portal</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-6 footer-links">
+                    <h4>Operations</h4>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a asp-controller="Invoices" asp-action="Index" class="text-decoration-none text-muted">Invoices & Billing</a></li>
+                        <li class="mb-2"><a asp-controller="Notifications" asp-action="Index" class="text-decoration-none text-muted">Notifications</a></li>
+                        <li class="mb-2"><a asp-controller="Home" asp-action="Services" class="text-decoration-none text-muted">Services</a></li>
+                        <li class="mb-2"><a asp-controller="Home" asp-action="About" class="text-decoration-none text-muted">About Us</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4 col-md-12 footer-contact">
+                    <h4>Contact Us</h4>
+                    <p>Cairo Medical Center, Tahrir Square, Cairo, Egypt</p>
+                    <p class="mt-2"><strong>Phone:</strong> +20 100 000 0000</p>
+                    <p><strong>Emergency:</strong> 123 / +20 100 911 0000</p>
+                    <p><strong>Email:</strong> care@arabclinic.com</p>
+                </div>
+            </div>
+        </div>
+        <div class="container copyright text-center py-4 border-top">
+            <p class="mb-1">&copy; @DateTime.UtcNow.Year <strong>ArabClinic</strong>. All Rights Reserved.</p>
+            <div class="text-muted small">Modern Healthcare Management System</div>
+        </div>
+    </footer>
+
+    <a href="#" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+    <script src="~/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="~/assets/vendor/aos/aos.js"></script>
+    <script src="~/assets/vendor/glightbox/js/glightbox.min.js"></script>
+    <script src="~/assets/vendor/purecounter/purecounter_vanilla.js"></script>
+    <script src="~/assets/vendor/swiper/swiper-bundle.min.js"></script>
+    <script src="~/assets/js/main.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

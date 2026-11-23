@@ -1,0 +1,79 @@
+@{
+    ViewData["Title"] = "Contact Us";
+    ViewData["BodyClass"] = "contact-page";
+}
+
+<div class="container py-4">
+    <div class="text-center mb-5" data-aos="fade-up">
+        <span class="badge bg-primary-subtle text-primary py-2 px-3 rounded-pill fw-medium mb-2">Get In Touch</span>
+        <h1 class="display-5 fw-bold">Contact ArabClinic</h1>
+        <p class="text-muted lead">We are here to answer your questions, assist with clinical appointments, and receive feedback.</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-4" data-aos="fade-right">
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-primary text-white p-3 rounded-circle me-3"><i class="bi bi-geo-alt fs-4"></i></div>
+                    <div>
+                        <h5 class="fw-bold mb-0">Our Location</h5>
+                        <small class="text-muted">Tahrir Square, Downtown Cairo, Egypt</small>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-primary text-white p-3 rounded-circle me-3"><i class="bi bi-telephone fs-4"></i></div>
+                    <div>
+                        <h5 class="fw-bold mb-0">Phone & Hotline</h5>
+                        <small class="text-muted">+20 100 000 0000 / 123 (Emergency)</small>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div class="bg-primary text-white p-3 rounded-circle me-3"><i class="bi bi-envelope fs-4"></i></div>
+                    <div>
+                        <h5 class="fw-bold mb-0">Email Inquiries</h5>
+                        <small class="text-muted">care@arabclinic.com</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 bg-primary text-white shadow-sm rounded-4 p-4">
+                <h5 class="fw-bold"><i class="bi bi-clock me-2"></i> Working Hours</h5>
+                <ul class="list-unstyled mt-3 mb-0 small">
+                    <li class="d-flex justify-content-between py-1 border-bottom border-light border-opacity-25"><span>Monday – Thursday:</span> <strong>8:00 AM – 10:00 PM</strong></li>
+                    <li class="d-flex justify-content-between py-1 border-bottom border-light border-opacity-25"><span>Friday:</span> <strong>9:00 AM – 8:00 PM</strong></li>
+                    <li class="d-flex justify-content-between py-1 border-bottom border-light border-opacity-25"><span>Saturday – Sunday:</span> <strong>8:00 AM – 10:00 PM</strong></li>
+                    <li class="d-flex justify-content-between pt-2"><span>Emergency Desk:</span> <strong class="badge bg-danger">24/7 Always Open</strong></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-lg-8" data-aos="fade-left">
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <h4 class="fw-bold mb-4">Send Us a Direct Message</h4>
+                <form onsubmit="event.preventDefault(); alert('Thank you! Your message has been received and our care coordinator will reach out shortly.'); this.reset();">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Your Name</label>
+                            <input type="text" class="form-control" placeholder="Full name" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Your Email</label>
+                            <input type="email" class="form-control" placeholder="email@example.com" required />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Subject</label>
+                            <input type="text" class="form-control" placeholder="Inquiry topic" required />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Message</label>
+                            <textarea class="form-control" rows="5" placeholder="How can our clinical team help you today?" required></textarea>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5">Send Message</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

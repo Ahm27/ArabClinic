@@ -26,6 +26,11 @@ public sealed class RouteTests : IClassFixture<ArabClinicWebApplicationFactory>
     [InlineData("/Appointments/Create")]
     [InlineData("/Patients")]
     [InlineData("/Patients/Create")]
+    [InlineData("/Invoices")]
+    [InlineData("/Notifications")]
+    [InlineData("/Home/About")]
+    [InlineData("/Home/Services")]
+    [InlineData("/Home/Contact")]
     [InlineData("/health")]
     public async Task ExistingRoutesReturnSuccess(string route)
     {

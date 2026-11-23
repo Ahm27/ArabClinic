@@ -1,0 +1,143 @@
+@model PatientDetailsViewModel
+@{
+    ViewData["Title"] = $"{Model.FullName} - Patient Profile";
+    ViewData["BodyClass"] = "patients-page";
+}
+
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+            <li class="breadcrumb-item"><a asp-action="Index">Patients</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@Model.FullName</li>
+        </ol>
+    </nav>
+
+    @if (TempData["PatientMessage"] is string message)
+    {
+        <div class="alert alert-success alert-dismissible fade show rounded-4 mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @message
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Profile Header -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-primary text-white rounded-circle fs-2 fw-bold d-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+                    @(string.IsNullOrWhiteSpace(Model.FullName) ? "P" : Model.FullName[0])
+                </div>
+                <div>
+                    <h2 class="fw-bold mb-1">@Model.FullName</h2>
+                    <div class="d-flex gap-2">
+                        <span class="badge bg-primary-subtle text-primary">@Model.Gender</span>
+                        <span class="badge bg-light text-muted border">DOB: @Model.DateOfBirth.ToString("dd MMM yyyy")</span>
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex gap-2 mt-3 mt-sm-0">
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary rounded-pill px-4">
+                    <i class="bi bi-pencil me-1"></i> Edit Profile
+                </a>
+                <a asp-controller="Appointments" asp-action="Create" class="btn btn-primary rounded-pill px-4">
+                    <i class="bi bi-calendar-plus me-1"></i> Book Visit
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                <h5 class="fw-bold mb-3"><i class="bi bi-info-circle text-primary me-2"></i> Contact & Address</h5>
+                <p class="text-muted small mb-1">Residential Address:</p>
+                <p class="fw-semibold">@(string.IsNullOrWhiteSpace(Model.Address) ? "No address on file" : Model.Address)</p>
+                <hr />
+                <p class="text-muted small mb-1">Patient ID:</p>
+                <p class="font-monospace small">@Model.Id</p>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                <h5 class="fw-bold text-danger mb-3"><i class="bi bi-shield-exclamation me-2"></i> Known Allergies</h5>
+                @if (string.IsNullOrWhiteSpace(Model.Allergies) || Model.Allergies.Equals("None", StringComparison.OrdinalIgnoreCase))
+                {
+                    <div class="alert alert-light border rounded-3 mb-0">
+                        <i class="bi bi-check2 text-success me-1"></i> No recorded adverse drug/food allergies.
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-danger rounded-3 mb-0">
+                        <strong><i class="bi bi-exclamation-triangle-fill me-1"></i> Allergy Alert:</strong>
+                        <p class="mb-0 mt-1">@Model.Allergies</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                <h5 class="fw-bold text-primary mb-3"><i class="bi bi-file-earmark-medical me-2"></i> Medical History</h5>
+                <p class="mb-0 text-muted">
+                    @(string.IsNullOrWhiteSpace(Model.MedicalHistory) ? "No recorded chronic conditions or surgical history." : Model.MedicalHistory)
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Patient Appointments -->
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+        <h4 class="fw-bold mb-3"><i class="bi bi-calendar2-check text-primary me-2"></i> Consultation History (@(Model.Appointments?.Count ?? 0))</h4>
+        @if (Model.Appointments == null || Model.Appointments.Count == 0)
+        {
+            <p class="text-muted mb-0">No past or scheduled appointments for this patient.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Appt #</th>
+                            <th>Doctor</th>
+                            <th>Specialty</th>
+                            <th>Date & Time</th>
+                            <th>Status</th>
+                            <th>Fee</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var app in Model.Appointments)
+                        {
+                            var badgeClass = app.Status switch
+                            {
+                                "Completed" => "bg-success",
+                                "Scheduled" => "bg-primary",
+                                "Cancelled" => "bg-danger",
+                                _ => "bg-secondary"
+                            };
+
+                            <tr>
+                                <td class="fw-bold">#@app.AppointmentId</td>
+                                <td>@app.DoctorName</td>
+                                <td><span class="badge bg-light text-dark border">@app.SpecializationName</span></td>
+                                <td>@app.StartDateTime.ToString("MMM dd, yyyy HH:mm")</td>
+                                <td><span class="badge @badgeClass rounded-pill">@app.Status</span></td>
+                                <td class="fw-bold text-primary">@app.ConsultationFee.ToString("C0")</td>
+                                <td class="text-end">
+                                    <a asp-controller="Appointments" asp-action="Details" asp-route-id="@app.AppointmentId" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                        View
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

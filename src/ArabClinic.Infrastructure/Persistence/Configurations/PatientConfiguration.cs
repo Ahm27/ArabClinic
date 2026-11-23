@@ -22,5 +22,22 @@ internal sealed class PatientConfiguration : IEntityTypeConfiguration<Patient>
         builder.Property(patient => patient.DateOfBirth)
             .HasColumnType("date")
             .IsRequired();
+
+        builder.Property(patient => patient.Gender)
+            .HasMaxLength(50);
+
+        builder.Property(patient => patient.Address)
+            .HasMaxLength(500);
+
+        builder.Property(patient => patient.Allergies)
+            .HasMaxLength(1000);
+
+        builder.Property(patient => patient.MedicalHistory)
+            .HasMaxLength(2000);
+
+        builder.HasMany(patient => patient.Appointments)
+            .WithOne(a => a.Patient)
+            .HasForeignKey(a => a.PatientId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
