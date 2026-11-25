@@ -1,0 +1,109 @@
+@model DoctorDto
+@{
+    ViewData["Title"] = $"{Model.FullName} - Profile";
+    ViewData["BodyClass"] = "doctors-page";
+}
+
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+            <li class="breadcrumb-item"><a asp-action="Index">Doctors</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@Model.FullName</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden p-3 text-center">
+                <img src="~/assets/img/health/staff-1.webp" class="img-fluid rounded-4 mb-3" alt="@Model.FullName" />
+                <h3 class="fw-bold mb-1">@Model.FullName</h3>
+                <span class="badge bg-primary-subtle text-primary fs-6 py-2 px-3 rounded-pill mb-3">
+                    @Model.SpecializationName
+                </span>
+                <p class="text-muted small mb-2"><i class="bi bi-geo-alt text-primary me-1"></i>@Model.Location</p>
+                <p class="text-muted small mb-3"><i class="bi bi-envelope text-primary me-1"></i>@Model.Email</p>
+
+                <div class="border-top pt-3 text-start">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Consultation Fee:</span>
+                        <strong class="text-primary fs-5">@Model.ConsultationFee.ToString("C0")</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Status:</span>
+                        <span class="badge bg-success">Available for Booking</span>
+                    </div>
+                </div>
+
+                <div class="d-grid mt-4">
+                    <a asp-controller="Appointments" asp-action="Create" asp-route-doctorId="@Model.DoctorId" class="btn btn-primary btn-lg rounded-pill">
+                        <i class="bi bi-calendar-check me-2"></i> Book Appointment
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <!-- Weekly Working Schedule -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                <h4 class="fw-bold mb-3"><i class="bi bi-clock-history text-primary me-2"></i> Weekly Office Hours</h4>
+                @if (Model.Schedules.Count == 0)
+                {
+                    <p class="text-muted mb-0">No regular schedules registered.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Day of Week</th>
+                                    <th>Start Time</th>
+                                    <th>End Time</th>
+                                    <th>Clinic Room</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var s in Model.Schedules.OrderBy(x => x.DayOfWeek))
+                                {
+                                    <tr>
+                                        <td class="fw-semibold">@s.DayOfWeek</td>
+                                        <td>@DateTime.Today.Add(s.StartTime).ToString("hh:mm tt")</td>
+                                        <td>@DateTime.Today.Add(s.EndTime).ToString("hh:mm tt")</td>
+                                        <td><span class="badge bg-light text-dark border">@Model.Location</span></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+
+            <!-- Scheduled Days Off -->
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <h4 class="fw-bold mb-3"><i class="bi bi-calendar-x text-warning me-2"></i> Upcoming Days Off & Leave</h4>
+                @if (Model.DaysOff.Count == 0)
+                {
+                    <p class="text-muted mb-0">No upcoming days off registered. The doctor is in full clinic attendance.</p>
+                }
+                else
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var off in Model.DaysOff)
+                        {
+                            <div class="list-group-item px-0 py-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <strong class="text-danger">
+                                        <i class="bi bi-exclamation-triangle me-1"></i> @off.StartDateTime.ToString("MMM dd, yyyy") – @off.EndDateTime.ToString("MMM dd, yyyy")
+                                    </strong>
+                                    <span class="badge bg-warning-subtle text-warning">Leave / Off-duty</span>
+                                </div>
+                                <p class="text-muted small mb-0">Reason: @(string.IsNullOrWhiteSpace(off.Reason) ? "Scheduled personal / medical conference leave" : off.Reason)</p>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

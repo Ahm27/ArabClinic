@@ -1,0 +1,133 @@
+@model IReadOnlyList<AppointmentDto>
+@{
+    ViewData["Title"] = "Appointments Management";
+    ViewData["BodyClass"] = "appointment-page";
+    var currentStatus = ViewData["CurrentStatus"] as string ?? "All";
+}
+
+<div class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="fw-bold mb-1">Clinic Appointments</h1>
+            <p class="text-muted mb-0">Track scheduled patient consultations, clinical completions, and cancellations.</p>
+        </div>
+        <a asp-action="Create" class="btn btn-primary rounded-pill px-4 mt-2 mt-sm-0">
+            <i class="bi bi-calendar-plus me-1"></i> Book New Appointment
+        </a>
+    </div>
+
+    @if (TempData["AppointmentSuccess"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show rounded-4 mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["AppointmentSuccess"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Status Filter Buttons -->
+    <div class="d-flex flex-wrap gap-2 mb-4 pb-2 border-bottom">
+        <a asp-action="Index" class="btn btn-sm rounded-pill @(currentStatus == "All" ? "btn-primary" : "btn-outline-secondary")">
+            All Visits (@Model.Count)
+        </a>
+        <a asp-action="Index" asp-route-status="Scheduled" class="btn btn-sm rounded-pill @(currentStatus == "Scheduled" ? "btn-primary" : "btn-outline-secondary")">
+            <i class="bi bi-clock me-1"></i> Scheduled
+        </a>
+        <a asp-action="Index" asp-route-status="Completed" class="btn btn-sm rounded-pill @(currentStatus == "Completed" ? "btn-primary" : "btn-outline-secondary")">
+            <i class="bi bi-check2-circle me-1"></i> Completed
+        </a>
+        <a asp-action="Index" asp-route-status="Cancelled" class="btn btn-sm rounded-pill @(currentStatus == "Cancelled" ? "btn-primary" : "btn-outline-secondary")">
+            <i class="bi bi-x-circle me-1"></i> Cancelled
+        </a>
+    </div>
+
+    @if (Model.Count == 0)
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-calendar2-x fs-1 text-muted"></i>
+            <h4 class="mt-3">No appointments found</h4>
+            <p class="text-muted">There are no appointments matching the current filter.</p>
+            <a asp-action="Create" class="btn btn-primary rounded-pill px-4">Book An Appointment</a>
+        </div>
+    }
+    else
+    {
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Appt #</th>
+                            <th>Patient</th>
+                            <th>Doctor & Specialty</th>
+                            <th>Date & Time</th>
+                            <th>Status</th>
+                            <th>Consultation Fee</th>
+                            <th>Invoice</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var app in Model)
+                        {
+                            var statusBadge = app.Status switch
+                            {
+                                "Completed" => "bg-success",
+                                "Scheduled" => "bg-primary",
+                                "Cancelled" => "bg-danger",
+                                _ => "bg-secondary"
+                            };
+
+                            var invBadge = app.InvoiceStatus switch
+                            {
+                                "Paid" => "bg-success-subtle text-success",
+                                "Unpaid" => "bg-warning-subtle text-warning-emphasis",
+                                "PartiallyPaid" => "bg-info-subtle text-info-emphasis",
+                                _ => "bg-light text-muted"
+                            };
+
+                            <tr>
+                                <td class="ps-4 fw-bold text-muted">#@app.AppointmentId</td>
+                                <td>
+                                    <a asp-controller="Patients" asp-action="Details" asp-route-id="@app.PatientId" class="fw-bold text-dark text-decoration-none">
+                                        @app.PatientName
+                                    </a>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold">@app.DoctorName</div>
+                                    <small class="badge bg-light text-dark border">@app.SpecializationName</small>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold">@app.StartDateTime.ToString("MMM dd, yyyy")</div>
+                                    <small class="text-muted">@app.StartDateTime.ToString("hh:mm tt") – @app.EndDateTime.ToString("hh:mm tt")</small>
+                                </td>
+                                <td>
+                                    <span class="badge @statusBadge rounded-pill px-3 py-2">@app.Status</span>
+                                </td>
+                                <td class="fw-bold text-primary">
+                                    @app.ConsultationFee.ToString("C0")
+                                </td>
+                                <td>
+                                    @if (app.HasInvoice)
+                                    {
+                                        <span class="badge @invBadge rounded-pill px-2 py-1">@(app.InvoiceStatus ?? "Invoice")</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">None</span>
+                                    }
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="btn-group">
+                                        <a asp-action="Details" asp-route-id="@app.AppointmentId" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                            View
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -22,7 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\ArabClinic.Application\ArabClinic.Application.csproj" />
-    <ProjectReference Include="..\..\src\ArabClinic.Api\ArabClinic.Api.csproj" />
+    <ProjectReference Include="..\..\src\ArabClinic.Web\ArabClinic.Web.csproj" />
     <ProjectReference Include="..\..\src\ArabClinic.Domain\ArabClinic.Domain.csproj" />
     <ProjectReference Include="..\..\src\ArabClinic.Infrastructure\ArabClinic.Infrastructure.csproj" />
   </ItemGroup>

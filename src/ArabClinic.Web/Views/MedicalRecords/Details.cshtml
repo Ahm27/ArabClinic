@@ -1,0 +1,127 @@
+@model MedicalRecordDetailsDto
+@{
+    ViewData["Title"] = $"Medical Record - #{Model.MedicalRecordId}";
+    ViewData["BodyClass"] = "medical-records-page";
+}
+
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Appointments" asp-action="Index">Appointments</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Appointments" asp-action="Details" asp-route-id="@Model.AppointmentId">Appointment #@Model.AppointmentId</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Medical Record</li>
+        </ol>
+    </nav>
+
+    @if (TempData["RecordSuccess"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show rounded-4 mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["RecordSuccess"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Header Record Card -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center">
+            <div>
+                <span class="badge bg-primary-subtle text-primary py-2 px-3 rounded-pill fw-medium mb-2">Electronic Medical Record</span>
+                <h2 class="fw-bold mb-1">Clinical Record #@Model.MedicalRecordId</h2>
+                <p class="text-muted mb-0">
+                    Patient: <strong class="text-dark">@Model.PatientName</strong> &nbsp;|&nbsp;
+                    Physician: <strong class="text-dark">@Model.DoctorName</strong> &nbsp;|&nbsp;
+                    Exam Date: <strong>@Model.AppointmentDate.ToString("dd MMM yyyy, HH:mm")</strong>
+                </p>
+            </div>
+            <a asp-controller="Appointments" asp-action="Details" asp-route-id="@Model.AppointmentId" class="btn btn-outline-secondary rounded-pill px-4 mt-3 mt-sm-0">
+                &larr; Back to Appointment
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Clinical Diagnosis & Treatment -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                <h4 class="fw-bold text-primary mb-3"><i class="bi bi-clipboard2-pulse me-2"></i> Diagnosis & Clinical Findings</h4>
+                <div class="p-3 bg-light rounded-3 mb-3">
+                    <label class="text-muted small fw-bold text-uppercase d-block mb-1">Primary Diagnosis</label>
+                    <h5 class="fw-bold text-dark mb-0">@Model.Diagnosis</h5>
+                </div>
+
+                <div class="mb-3">
+                    <label class="text-muted small fw-bold text-uppercase d-block mb-1">Presenting Symptoms</label>
+                    <p class="mb-0">@(string.IsNullOrWhiteSpace(Model.Symptoms) ? "No specific symptoms recorded." : Model.Symptoms)</p>
+                </div>
+
+                <div>
+                    <label class="text-muted small fw-bold text-uppercase d-block mb-1">Treatment Plan & Physician Notes</label>
+                    <p class="mb-0">@(string.IsNullOrWhiteSpace(Model.TreatmentNotes) ? "No additional notes provided." : Model.TreatmentNotes)</p>
+                </div>
+            </div>
+
+            <!-- Documents -->
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <h4 class="fw-bold mb-3"><i class="bi bi-files text-primary me-2"></i> Medical Documents & Attachments</h4>
+                @if (Model.Documents.Count == 0)
+                {
+                    <p class="text-muted mb-0">No documents attached to this record.</p>
+                }
+                else
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var doc in Model.Documents)
+                        {
+                            <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <div>
+                                    <i class="bi bi-file-earmark-pdf-fill text-danger fs-4 me-2"></i>
+                                    <strong class="text-dark">@doc.FileName</strong>
+                                    <small class="text-muted d-block ms-4">Uploaded: @doc.UploadedAt.ToString("MMM dd, yyyy HH:mm")</small>
+                                </div>
+                                <span class="badge bg-light text-dark border">@doc.ContentType</span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Prescriptions -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                <h4 class="fw-bold mb-3"><i class="bi bi-prescription text-primary me-2"></i> Prescriptions Issued</h4>
+                @if (Model.Prescriptions.Count == 0)
+                {
+                    <p class="text-muted mb-0">No medications prescribed for this consultation.</p>
+                }
+                else
+                {
+                    @foreach (var p in Model.Prescriptions)
+                    {
+                        <div class="border rounded-4 p-3 mb-3 bg-light">
+                            <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                                <span class="badge bg-primary rounded-pill">Prescription #@p.PrescriptionId</span>
+                                <small class="text-muted">@p.IssuedAt.ToString("MMM dd, yyyy")</small>
+                            </div>
+
+                            @foreach (var item in p.Items)
+                            {
+                                <div class="bg-white rounded-3 p-3 mb-2 shadow-sm">
+                                    <div class="fw-bold text-dark fs-6 mb-1">
+                                        <i class="bi bi-capsule text-primary me-1"></i> @item.MedicationName
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-2 small text-muted">
+                                        <span class="badge bg-light text-dark border">Dosage: @item.Dosage</span>
+                                        <span class="badge bg-light text-dark border">Freq: @item.Frequency</span>
+                                        <span class="badge bg-light text-dark border">Duration: @item.Duration</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>

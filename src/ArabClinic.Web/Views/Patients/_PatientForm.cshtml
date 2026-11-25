@@ -1,0 +1,43 @@
+@model PatientFormViewModel
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <label asp-for="FullName" class="form-label fw-semibold"></label>
+        <input asp-for="FullName" class="form-control form-control-lg rounded-3" autocomplete="name" placeholder="Patient's full name" />
+        <span asp-validation-for="FullName" class="text-danger small"></span>
+    </div>
+
+    <div class="col-md-3">
+        <label asp-for="DateOfBirth" class="form-label fw-semibold"></label>
+        <input asp-for="DateOfBirth" class="form-control form-control-lg rounded-3" type="date" />
+        <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
+    </div>
+
+    <div class="col-md-3">
+        <label asp-for="Gender" class="form-label fw-semibold"></label>
+        <select asp-for="Gender" class="form-select form-select-lg rounded-3">
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+        </select>
+        <span asp-validation-for="Gender" class="text-danger small"></span>
+    </div>
+
+    <div class="col-12">
+        <label asp-for="Address" class="form-label fw-semibold"></label>
+        <input asp-for="Address" class="form-control rounded-3" placeholder="Residential address (e.g. 12 El Tahrir St, Cairo)" />
+        <span asp-validation-for="Address" class="text-danger small"></span>
+    </div>
+
+    <div class="col-md-6">
+        <label asp-for="Allergies" class="form-label fw-semibold"></label>
+        <textarea asp-for="Allergies" class="form-control rounded-3" rows="3" placeholder="Known drug or food allergies (e.g. Penicillin, Peanuts, Sulfa)"></textarea>
+        <span asp-validation-for="Allergies" class="text-danger small"></span>
+    </div>
+
+    <div class="col-md-6">
+        <label asp-for="MedicalHistory" class="form-label fw-semibold"></label>
+        <textarea asp-for="MedicalHistory" class="form-control rounded-3" rows="3" placeholder="Chronic diseases, prior surgeries, relevant conditions"></textarea>
+        <span asp-validation-for="MedicalHistory" class="text-danger small"></span>
+    </div>
+</div>

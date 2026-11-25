@@ -1,0 +1,47 @@
+@model IReadOnlyList<SpecializationDto>
+@{
+    ViewData["Title"] = "Specialties & Departments";
+    ViewData["BodyClass"] = "departments-page";
+}
+
+<div class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="fw-bold mb-1">Clinical Departments & Specialties</h1>
+            <p class="text-muted mb-0">Our clinical structure delivers specialized diagnostics, treatments, and therapeutic programs.</p>
+        </div>
+        <a asp-controller="Appointments" asp-action="Create" class="btn btn-primary rounded-pill px-4 mt-2 mt-sm-0">
+            <i class="bi bi-calendar-plus me-1"></i> Book Appointment
+        </a>
+    </div>
+
+    <div class="row g-4">
+        @foreach (var spec in Model)
+        {
+            <div class="col-lg-4 col-md-6" data-aos="fade-up">
+                <div class="card h-100 border-0 shadow-sm rounded-4 p-4 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="bg-primary-subtle text-primary p-3 rounded-circle">
+                            <i class="bi bi-hospital fs-3"></i>
+                        </div>
+                        <span class="badge bg-secondary-subtle text-secondary rounded-pill py-2 px-3">
+                            <i class="bi bi-person-fill me-1"></i> @spec.DoctorCount Specialists
+                        </span>
+                    </div>
+
+                    <h3 class="fw-bold mb-2">@spec.Name</h3>
+                    <p class="text-muted small mb-4 flex-grow-1">@spec.Description</p>
+
+                    <div class="d-flex gap-2 mt-auto">
+                        <a asp-action="Details" asp-route-id="@spec.SpecializationId" class="btn btn-outline-primary rounded-pill flex-grow-1">
+                            Department Details
+                        </a>
+                        <a asp-controller="Doctors" asp-action="Index" asp-route-specializationId="@spec.SpecializationId" class="btn btn-primary rounded-pill px-3">
+                            Doctors
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

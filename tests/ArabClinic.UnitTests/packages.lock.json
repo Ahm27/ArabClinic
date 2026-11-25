@@ -807,13 +807,6 @@
           "xunit.extensibility.core": "[2.9.2]"
         }
       },
-      "arabclinic.api": {
-        "type": "Project",
-        "dependencies": {
-          "ArabClinic.Application": "[1.0.0, )",
-          "ArabClinic.Infrastructure": "[1.0.0, )"
-        }
-      },
       "arabclinic.application": {
         "type": "Project",
         "dependencies": {
@@ -829,6 +822,13 @@
           "ArabClinic.Application": "[1.0.0, )",
           "ArabClinic.Domain": "[1.0.0, )",
           "Microsoft.EntityFrameworkCore.SqlServer": "[9.0.8, )"
+        }
+      },
+      "arabclinic.web": {
+        "type": "Project",
+        "dependencies": {
+          "ArabClinic.Application": "[1.0.0, )",
+          "ArabClinic.Infrastructure": "[1.0.0, )"
         }
       }
     }

@@ -1,7 +1,0 @@
-@model PatientDetailsViewModel
-@{ ViewData["Title"] = "Patient details"; ViewData["BodyClass"] = "patients-page"; }
-<partial name="_PageTitle" model='("Patient details", "Review the patient’s core record.")' />
-<section class="section"><div class="container">
-@if (TempData["PatientMessage"] is string message) { <div class="alert alert-success"><i class="bi bi-check-circle-fill me-2"></i>@message</div> }
-<div class="record-card"><div class="record-card-header"><div class="patient-avatar patient-avatar-lg">@Model.FullName[0]</div><div><span class="record-label">Patient</span><h2>@Model.FullName</h2></div></div><dl class="record-grid"><div><dt>Date of birth</dt><dd>@Model.DateOfBirth.ToString("dd MMMM yyyy")</dd></div><div><dt>Patient ID</dt><dd><code>@Model.Id</code></dd></div></dl><div class="record-actions"><a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary"><i class="bi bi-pencil me-2"></i>Edit patient</a><a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger">Delete</a><a asp-action="Index" class="btn btn-light">Back to patients</a></div></div>
-</div></section>
