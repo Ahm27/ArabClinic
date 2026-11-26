@@ -1,3 +1,4 @@
+using ArabClinic.Application.Accounts;
 using ArabClinic.Application.Appointments;
 using ArabClinic.Application.Doctors;
 using ArabClinic.Application.Invoices;
@@ -8,7 +9,7 @@ using ArabClinic.Application.Specializations;
 using ArabClinic.Infrastructure.Persistence;
 using ArabClinic.Infrastructure.Persistence.Repositories;
 using ArabClinic.Infrastructure.Services;
-using ArabClinic.Application.Accounts;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

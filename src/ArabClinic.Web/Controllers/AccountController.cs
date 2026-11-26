@@ -1,7 +1,7 @@
-﻿using ArabClinic.Application.Accounts;
-using ArabClinic.Web.Models.Account;
+﻿using System.Security.Claims;
 
-using System.Security.Claims;
+using ArabClinic.Application.Accounts;
+using ArabClinic.Web.Models.Account;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
