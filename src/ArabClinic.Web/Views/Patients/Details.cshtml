@@ -88,6 +88,37 @@
         </div>
     </div>
 
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <h4 class="fw-bold mb-0"><i class="bi bi-clipboard2-pulse text-primary me-2"></i> Clinical Visit History (@(Model.Visits?.Count ?? 0))</h4>
+            <a asp-controller="MedicalRecords" asp-action="CreateVisit" asp-route-patientId="@Model.Id" class="btn btn-primary rounded-pill px-4">Record visit</a>
+        </div>
+        @if (Model.Visits is null || Model.Visits.Count == 0)
+        {
+            <p class="text-muted mb-0">No clinical visits recorded for this patient.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light"><tr><th>Date</th><th>Doctor</th><th>Summary</th><th>Appointment</th><th></th></tr></thead>
+                    <tbody>
+                    @foreach (var visit in Model.Visits)
+                    {
+                        <tr>
+                            <td>@visit.VisitDate.ToString("dd MMM yyyy, HH:mm")</td>
+                            <td>@visit.DoctorName</td>
+                            <td>@(visit.Summary.Length > 120 ? visit.Summary[..120] + "…" : visit.Summary)</td>
+                            <td>@(visit.AppointmentId.HasValue ? $"#{visit.AppointmentId}" : "—")</td>
+                            <td class="text-end"><a asp-controller="MedicalRecords" asp-action="VisitDetails" asp-route-id="@visit.MedicalVisitId" class="btn btn-sm btn-outline-primary rounded-pill">Details</a></td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
     <!-- Patient Appointments -->
     <div class="card border-0 shadow-sm rounded-4 p-4">
         <h4 class="fw-bold mb-3"><i class="bi bi-calendar2-check text-primary me-2"></i> Consultation History (@(Model.Appointments?.Count ?? 0))</h4>

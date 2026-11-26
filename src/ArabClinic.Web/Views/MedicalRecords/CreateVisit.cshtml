@@ -1,0 +1,43 @@
+@model ArabClinic.Web.Models.MedicalRecords.CreateMedicalVisitViewModel
+@{
+    ViewData["Title"] = "Record a Visit";
+    ViewData["BodyClass"] = "medical-records-page";
+}
+
+<div class="container py-4">
+    <div class="row"><div class="col-lg-9 mx-auto">
+        <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5">
+            <h2 class="fw-bold mb-2">Record a Clinical Visit</h2>
+            <p class="text-muted mb-4">Each saved visit is added to the patient’s history and remains available as a separate record.</p>
+            <div asp-validation-summary="All" class="text-danger mb-3"></div>
+            <form asp-action="CreateVisit" method="post">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="PatientId" class="form-label">Patient</label>
+                        <select asp-for="PatientId" asp-items="Model.PatientOptions" class="form-select"><option value="">Choose patient</option></select>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="DoctorId" class="form-label">Doctor</label>
+                        <select asp-for="DoctorId" asp-items="Model.DoctorOptions" class="form-select"><option value="">Choose doctor</option></select>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="VisitDate" class="form-label">Visit date and time</label>
+                        <input asp-for="VisitDate" type="datetime-local" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="AppointmentId" class="form-label">Appointment ID (optional)</label>
+                        <input asp-for="AppointmentId" class="form-control" placeholder="Leave blank for a standalone visit" />
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="Summary" class="form-label">Clinical summary</label>
+                        <textarea asp-for="Summary" rows="7" class="form-control" placeholder="Record the visit summary"></textarea>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary rounded-pill px-4">Save visit</button>
+                    <a asp-controller="Patients" asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div></div>
+</div>

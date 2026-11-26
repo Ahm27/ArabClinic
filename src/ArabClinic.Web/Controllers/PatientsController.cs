@@ -1,4 +1,5 @@
 using ArabClinic.Application.Appointments;
+using ArabClinic.Application.MedicalRecords;
 using ArabClinic.Application.Patients;
 using ArabClinic.Web.Models.Patients;
 
@@ -8,7 +9,8 @@ namespace ArabClinic.Web.Controllers;
 
 public sealed class PatientsController(
     IPatientService patientService,
-    IAppointmentService appointmentService) : Controller
+    IAppointmentService appointmentService,
+    IMedicalVisitReadService medicalVisitReadService) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
@@ -26,6 +28,7 @@ public sealed class PatientsController(
         }
 
         var appointments = await appointmentService.GetAllAsync(patientId: id, cancellationToken: cancellationToken);
+        var visits = await medicalVisitReadService.GetPatientHistoryAsync(id, cancellationToken);
 
         return View(new PatientDetailsViewModel(
             patient.Id,
@@ -35,7 +38,8 @@ public sealed class PatientsController(
             patient.Address,
             patient.Allergies,
             patient.MedicalHistory,
-            appointments));
+            appointments,
+            visits));
     }
 
     public IActionResult Create() => View(new PatientFormViewModel());
