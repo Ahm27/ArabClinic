@@ -1,4 +1,5 @@
 using System.Diagnostics;
+
 using ArabClinic.Application.Doctors;
 using ArabClinic.Application.Specializations;
 using ArabClinic.Web.Models;
