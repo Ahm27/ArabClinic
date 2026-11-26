@@ -1,6 +1,6 @@
+using ArabClinic.Domain.Appointments;
 using ArabClinic.Domain.Common;
 using ArabClinic.Domain.Users;
-using ArabClinic.Domain.Appointments;
 
 namespace ArabClinic.Domain.Patients;
 

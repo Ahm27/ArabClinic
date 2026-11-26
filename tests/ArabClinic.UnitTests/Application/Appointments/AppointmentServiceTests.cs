@@ -103,7 +103,7 @@ public sealed class AppointmentServiceTests
         var doctorUser = new ApplicationUser { Id = "doc-102", FullName = "Dr. DayOff Specialist", Email = "dayoff@test.com" };
         var spec = new Specialization { Name = "Neurology" };
         var doctor = new Doctor { DoctorId = doctorUser.Id, Specialization = spec, ConsultationFee = 400, Location = "Room 2" };
-        
+
         var dayOffStart = DateTime.UtcNow.Date.AddDays(2).AddHours(8);
         var dayOffEnd = dayOffStart.AddDays(2);
         doctor.DaysOff.Add(new DoctorDayOff { DoctorId = doctor.DoctorId, StartDateTime = dayOffStart, EndDateTime = dayOffEnd, Reason = "Vacation" });

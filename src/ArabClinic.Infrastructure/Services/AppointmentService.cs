@@ -194,7 +194,7 @@ public sealed class AppointmentService(ArabClinicDbContext dbContext) : IAppoint
         {
             var pName = string.IsNullOrWhiteSpace(request.PatientName) ? "Patient Guest" : request.PatientName.Trim();
             var patient = new Patient(pName, DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-25)));
-            
+
             var user = new ApplicationUser
             {
                 Id = patient.Id.ToString(),

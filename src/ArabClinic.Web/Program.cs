@@ -1,6 +1,7 @@
 using ArabClinic.Application;
 using ArabClinic.Infrastructure;
 using ArabClinic.Infrastructure.Persistence;
+
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
