@@ -322,6 +322,50 @@ namespace ArabClinic.Infrastructure.Persistence.Migrations
                     b.ToTable("MedicalRecords", (string)null);
                 });
 
+            modelBuilder.Entity("ArabClinic.Domain.MedicalRecords.MedicalVisit", b =>
+                {
+                    b.Property<int>("MedicalVisitId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MedicalVisitId"));
+
+                    b.Property<int?>("AppointmentId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DoctorId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<Guid>("PatientId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("VisitDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("MedicalVisitId");
+
+                    b.HasIndex("AppointmentId");
+
+                    b.HasIndex("DoctorId");
+
+                    b.HasIndex("PatientId", "VisitDate");
+
+                    b.ToTable("MedicalVisits", (string)null);
+                });
+
             modelBuilder.Entity("ArabClinic.Domain.MedicalRecords.Prescription", b =>
                 {
                     b.Property<int>("PrescriptionId")
@@ -698,6 +742,32 @@ namespace ArabClinic.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Appointment");
+                });
+
+            modelBuilder.Entity("ArabClinic.Domain.MedicalRecords.MedicalVisit", b =>
+                {
+                    b.HasOne("ArabClinic.Domain.Appointments.Appointment", "Appointment")
+                        .WithMany()
+                        .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("ArabClinic.Domain.Doctors.Doctor", "Doctor")
+                        .WithMany()
+                        .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ArabClinic.Domain.Patients.Patient", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Appointment");
+
+                    b.Navigation("Doctor");
+
+                    b.Navigation("Patient");
                 });
 
             modelBuilder.Entity("ArabClinic.Domain.MedicalRecords.Prescription", b =>

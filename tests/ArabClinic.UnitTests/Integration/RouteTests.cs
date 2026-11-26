@@ -26,6 +26,7 @@ public sealed class RouteTests : IClassFixture<ArabClinicWebApplicationFactory>
     [InlineData("/Appointments/Create")]
     [InlineData("/Patients")]
     [InlineData("/Patients/Create")]
+    [InlineData("/MedicalRecords/CreateVisit")]
     [InlineData("/Invoices")]
     [InlineData("/Notifications")]
     [InlineData("/Home/About")]
