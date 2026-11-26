@@ -1,7 +1,9 @@
 using ArabClinic.Application;
+using ArabClinic.Domain.Users;
 using ArabClinic.Infrastructure;
 using ArabClinic.Infrastructure.Persistence;
 
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +11,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services
     .AddApplication()
     .AddInfrastructure(builder.Configuration);
+builder.Services
+    .AddIdentity<ApplicationUser, IdentityRole>()
+    .AddEntityFrameworkStores<ArabClinicDbContext>()
+    .AddDefaultTokenProviders();
 builder.Services.AddControllersWithViews();
 builder.Services.AddHealthChecks();
 
@@ -51,6 +57,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapHealthChecks("/health");

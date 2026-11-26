@@ -7,14 +7,15 @@ using ArabClinic.Domain.Patients;
 using ArabClinic.Domain.Specializations;
 using ArabClinic.Domain.Users;
 
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace ArabClinic.Infrastructure.Persistence;
 
-public sealed class ArabClinicDbContext(DbContextOptions<ArabClinicDbContext> options)
-    : DbContext(options)
+public sealed class ArabClinicDbContext(
+    DbContextOptions<ArabClinicDbContext> options)
+    : IdentityDbContext<ApplicationUser>(options)
 {
-    public DbSet<ApplicationUser> Users => Set<ApplicationUser>();
     public DbSet<Specialization> Specializations => Set<Specialization>();
     public DbSet<Doctor> Doctors => Set<Doctor>();
     public DbSet<Patient> Patients => Set<Patient>();
@@ -33,9 +34,9 @@ public sealed class ArabClinicDbContext(DbContextOptions<ArabClinicDbContext> op
     public DbSet<NotificationPreference> NotificationPreferences => Set<NotificationPreference>();
     public DbSet<NotificationDeliveryLog> NotificationDeliveryLogs => Set<NotificationDeliveryLog>();
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    protected override void OnModelCreating(ModelBuilder builder)
     {
-        base.OnModelCreating(modelBuilder);
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ArabClinicDbContext).Assembly);
+        base.OnModelCreating(builder);
+        builder.ApplyConfigurationsFromAssembly(typeof(ArabClinicDbContext).Assembly);
     }
 }
