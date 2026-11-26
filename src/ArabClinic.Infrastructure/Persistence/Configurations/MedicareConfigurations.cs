@@ -173,6 +173,31 @@ internal sealed class MedicalRecordConfiguration : IEntityTypeConfiguration<Medi
     }
 }
 
+internal sealed class MedicalVisitConfiguration : IEntityTypeConfiguration<MedicalVisit>
+{
+    public void Configure(EntityTypeBuilder<MedicalVisit> builder)
+    {
+        builder.ToTable("MedicalVisits");
+        builder.HasKey(visit => visit.MedicalVisitId);
+        builder.Property(visit => visit.DoctorId).HasMaxLength(450).IsRequired();
+        builder.Property(visit => visit.Summary).HasMaxLength(4000).IsRequired();
+        builder.HasIndex(visit => new { visit.PatientId, visit.VisitDate });
+
+        builder.HasOne(visit => visit.Patient)
+            .WithMany()
+            .HasForeignKey(visit => visit.PatientId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(visit => visit.Doctor)
+            .WithMany()
+            .HasForeignKey(visit => visit.DoctorId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(visit => visit.Appointment)
+            .WithMany()
+            .HasForeignKey(visit => visit.AppointmentId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
 internal sealed class PrescriptionConfiguration : IEntityTypeConfiguration<Prescription>
 {
     public void Configure(EntityTypeBuilder<Prescription> builder)
