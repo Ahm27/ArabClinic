@@ -8,7 +8,7 @@ using ArabClinic.Application.Specializations;
 using ArabClinic.Infrastructure.Persistence;
 using ArabClinic.Infrastructure.Persistence.Repositories;
 using ArabClinic.Infrastructure.Services;
-
+using ArabClinic.Application.Accounts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,6 +43,7 @@ public static class DependencyInjection
         services.AddScoped<IMedicalVisitWriteService, MedicalVisitWriteService>();
         services.AddScoped<IBillingService, BillingService>();
         services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IAccountService, AccountService>();
 
         return services;
     }
