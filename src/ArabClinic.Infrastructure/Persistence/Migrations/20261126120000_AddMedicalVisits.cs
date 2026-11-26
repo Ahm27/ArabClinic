@@ -12,6 +12,8 @@ namespace ArabClinic.Infrastructure.Persistence.Migrations;
 [Migration("20261126120000_AddMedicalVisits")]
 public sealed class AddMedicalVisits : Migration
 {
+
+    private static readonly string[] PatientIdVisitDateIndexColumns = ["PatientId", "VisitDate"];
     protected override void Up(MigrationBuilder migrationBuilder)
     {
         migrationBuilder.CreateTable(
@@ -38,7 +40,7 @@ public sealed class AddMedicalVisits : Migration
 
         migrationBuilder.CreateIndex("IX_MedicalVisits_AppointmentId", "MedicalVisits", "AppointmentId");
         migrationBuilder.CreateIndex("IX_MedicalVisits_DoctorId", "MedicalVisits", "DoctorId");
-        migrationBuilder.CreateIndex("IX_MedicalVisits_PatientId_VisitDate", "MedicalVisits", new[] { "PatientId", "VisitDate" });
+        migrationBuilder.CreateIndex("IX_MedicalVisits_PatientId_VisitDate", "MedicalVisits", PatientIdVisitDateIndexColumns);
     }
 
     protected override void Down(MigrationBuilder migrationBuilder)
