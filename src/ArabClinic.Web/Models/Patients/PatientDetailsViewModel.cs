@@ -13,3 +13,4 @@ public sealed record PatientDetailsViewModel(
     string? MedicalHistory = null,
     IReadOnlyList<AppointmentDto>? Appointments = null,
     IReadOnlyList<MedicalVisitDto>? Visits = null);
+    IReadOnlyList<AppointmentDto>? Appointments = null);

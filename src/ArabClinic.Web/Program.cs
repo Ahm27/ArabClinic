@@ -1,6 +1,7 @@
 using ArabClinic.Application;
 using ArabClinic.Infrastructure;
 using ArabClinic.Infrastructure.Persistence;
+
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,9 +20,17 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var db = scope.ServiceProvider.GetRequiredService<ArabClinicDbContext>();
-        Console.WriteLine("[Startup] Applying database migrations...");
-        await db.Database.MigrateAsync();
-        Console.WriteLine("[Startup] Migrations applied.");
+        if (db.Database.IsRelational())
+        {
+            Console.WriteLine("[Startup] Applying database migrations...");
+            await db.Database.MigrateAsync();
+            Console.WriteLine("[Startup] Migrations applied.");
+        }
+        else
+        {
+            await db.Database.EnsureCreatedAsync();
+        }
+
         await DbInitializer.SeedAsync(db);
         Console.WriteLine("[Startup] Database seeded.");
     }
