@@ -1,0 +1,33 @@
+@model ArabClinic.Application.MedicalRecords.MedicalVisitDto
+@{
+    ViewData["Title"] = $"Visit - {Model.PatientName}";
+    ViewData["BodyClass"] = "medical-records-page";
+}
+
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Patients" asp-action="Details" asp-route-id="@Model.PatientId">@Model.PatientName</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Visit #@Model.MedicalVisitId</li>
+        </ol>
+    </nav>
+
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+            <div>
+                <span class="badge bg-primary-subtle text-primary mb-2">Clinical Visit</span>
+                <h2 class="fw-bold mb-1">Visit #@Model.MedicalVisitId</h2>
+                <p class="text-muted mb-0">@Model.VisitDate.ToString("dd MMM yyyy, HH:mm")</p>
+            </div>
+            <a asp-controller="Patients" asp-action="Details" asp-route-id="@Model.PatientId" class="btn btn-outline-secondary rounded-pill">Back to patient</a>
+        </div>
+        <div class="row g-3 mb-4">
+            <div class="col-md-6"><span class="text-muted">Patient</span><div class="fw-semibold">@Model.PatientName</div></div>
+            <div class="col-md-6"><span class="text-muted">Doctor</span><div class="fw-semibold">@Model.DoctorName</div></div>
+            <div class="col-md-6"><span class="text-muted">Appointment</span><div class="fw-semibold">@(Model.AppointmentId.HasValue ? $"#{Model.AppointmentId}" : "Standalone visit")</div></div>
+        </div>
+        <h5 class="fw-bold">Visit summary</h5>
+        <p class="mb-0" style="white-space: pre-wrap">@Model.Summary</p>
+    </div>
+</div>
