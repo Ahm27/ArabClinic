@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace ArabClinic.Web.Models.MedicalRecords;
