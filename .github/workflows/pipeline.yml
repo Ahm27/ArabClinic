@@ -73,6 +73,14 @@ jobs:
             --property:ContinuousIntegrationBuild=true \
             2>&1 | tee "$LOG_DIR/build.log"
 
+      - name: Restore repository .NET tools
+        id: tools
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          trap 'echo "::error title=.NET tool restore failed::The pinned dotnet-ef tool could not be restored from .config/dotnet-tools.json."' ERR
+          dotnet tool restore 2>&1 | tee "$LOG_DIR/tool-restore.log"
+
       - name: Run automated tests
         id: tests
         shell: bash
@@ -95,7 +103,7 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
-          trap 'echo "::error title=Pending EF model changes::Create and commit a migration before deploying."' ERR
+          trap 'echo "::error title=EF migration verification failed::Review migrations.log. If the model changed, create and commit a migration before deploying."' ERR
           dotnet ef migrations has-pending-model-changes \
             --project src/ArabClinic.Infrastructure \
             --startup-project src/ArabClinic.Web \
@@ -180,6 +188,7 @@ jobs:
             echo "| Restore | ${{ steps.restore.outcome }} |"
             echo "| Format | ${{ steps.format.outcome }} |"
             echo "| Build | ${{ steps.build.outcome }} |"
+            echo "| .NET tools | ${{ steps.tools.outcome }} |"
             echo "| Tests | ${{ steps.tests.outcome }} |"
             echo "| EF migrations | ${{ steps.migrations.outcome }} |"
             echo "| Publish | ${{ steps.publish.outcome }} |"
