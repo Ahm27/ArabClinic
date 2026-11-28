@@ -267,7 +267,7 @@ jobs:
         run: |
           set -Eeuo pipefail
           set +x
-          trap 'echo "::error title=FTP deployment failed::Check the FTP host, credentials, protocol, port, and remote directory."' ERR
+          trap 'echo "::error title=FTP deployment failed::Review the lftp output above for the exact server or transfer error."' ERR
 
           case "$FTP_PROTOCOL" in
             ftp)
@@ -319,7 +319,9 @@ jobs:
           offline_uploaded=1
           sleep 3
           echo "Uploading verified publish output..."
-          lftp_run "mirror --reverse --verbose=1 --parallel=2 --exclude-glob app_offline.htm --exclude-glob appsettings.Development.json --exclude-glob appsettings.Production.json \"$PUBLISH_DIR/\" ."
+          # Somee runs IIS on Windows and does not support Unix SITE CHMOD.
+          # Keep transfer failures fatal, but do not try to synchronize modes.
+          lftp_run "mirror --reverse --no-perms --verbose=1 --parallel=2 --exclude-glob app_offline.htm --exclude-glob appsettings.Development.json --exclude-glob appsettings.Production.json \"$PUBLISH_DIR/\" ."
           lftp_run "rm -f app_offline.htm"
           offline_uploaded=0
           trap - EXIT
