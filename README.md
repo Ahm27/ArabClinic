@@ -19,7 +19,36 @@ Dependencies point inward: `Web -> Application/Infrastructure`,
 
 ## Local development
 
-Requires the .NET SDK version selected by `global.json`.
+Install the .NET SDK version selected by `global.json`. ArabClinic requires a
+SQL Server connection string named `ConnectionStrings:ArabClinic` during
+startup. The repository intentionally does not contain one because connection
+strings may include credentials. If it is missing, startup stops with:
+
+```text
+Connection string 'ArabClinic' is not configured.
+```
+
+### Windows and Visual Studio
+
+For SQL Server LocalDB, run these commands from the repository root in
+PowerShell or a terminal:
+
+```powershell
+dotnet user-secrets set "ConnectionStrings:ArabClinic" "Server=(localdb)\MSSQLLocalDB;Database=MediCare;Trusted_Connection=True;TrustServerCertificate=True;" --project src/ArabClinic.Web
+dotnet tool restore
+dotnet ef database update --project src/ArabClinic.Infrastructure --startup-project src/ArabClinic.Web
+```
+
+For SQL Server Express, use this connection string instead:
+
+```powershell
+dotnet user-secrets set "ConnectionStrings:ArabClinic" "Server=.\SQLEXPRESS;Database=MediCare;Trusted_Connection=True;TrustServerCertificate=True;" --project src/ArabClinic.Web
+```
+
+Restart Visual Studio after setting user secrets, then select
+`ArabClinic.Web` as the startup project.
+
+### macOS, Linux, or Docker Desktop
 
 On macOS/Linux, SQL Server LocalDB is not available. Create the local Docker
 configuration, replace the example password, then start SQL Server. It is
@@ -29,6 +58,37 @@ exposed on `localhost:1433`.
 cp .env.example .env
 docker compose up -d db
 ```
+
+On Windows PowerShell, copy the example with:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Edit `.env` and replace the placeholder with a strong local password:
+
+```dotenv
+MSSQL_SA_PASSWORD=replace-with-a-strong-local-password
+```
+
+`.env.example` is a committed template used by Docker Compose. The real `.env`
+file is ignored by Git. Visual Studio and `dotnet run` do not automatically
+load `.env`; use .NET User Secrets for those workflows.
+
+To run the web application directly while SQL Server runs in Docker, configure
+the matching connection string:
+
+```bash
+dotnet user-secrets set "ConnectionStrings:ArabClinic" \
+  "Server=localhost,1433;Database=MediCare;User Id=sa;Password=<the password from .env>;Encrypt=False;TrustServerCertificate=True" \
+  --project src/ArabClinic.Web
+dotnet tool restore
+dotnet ef database update \
+  --project src/ArabClinic.Infrastructure \
+  --startup-project src/ArabClinic.Web
+```
+
+### Build and run
 
 ```bash
 dotnet restore
@@ -40,24 +100,14 @@ dotnet run --project src/ArabClinic.Web
 The web application is available at the root URL. The health endpoint is
 available at `/health`.
 
-Patient management is backed by SQL Server through Entity Framework Core. Set
-the `ConnectionStrings:ArabClinic` value with .NET user secrets or the
-`ConnectionStrings__ArabClinic` environment variable before applying migrations.
-For example:
+Authentication uses Patient, Doctor, and Admin roles. Configure the first admin
+with user secrets for local development:
 
 ```bash
-dotnet user-secrets set "ConnectionStrings:ArabClinic" \
-  "<your SQL Server connection string>" \
-  --project src/ArabClinic.Web
-dotnet tool restore
-dotnet ef database update \
-  --project src/ArabClinic.Infrastructure \
-  --startup-project src/ArabClinic.Web
+dotnet user-secrets set "AdminSeed:Email" "admin@arabclinic.com" --project src/ArabClinic.Web
+dotnet user-secrets set "AdminSeed:Password" "<a strong unique password>" --project src/ArabClinic.Web
+dotnet user-secrets set "AdminSeed:FullName" "Clinic Administrator" --project src/ArabClinic.Web
 ```
-
-Authentication uses Patient, Doctor, and Admin roles. Configure the first admin
-with `AdminSeed__Email`, `AdminSeed__Password`, and optionally
-`AdminSeed__FullName` in environment variables or user secrets.
 
 To run in a container:
 
@@ -101,14 +151,16 @@ and license notice are retained in `Clinic-v1.0.0/Readme.txt`.
 
 ## CI/CD
 
-- **CI** runs on pull requests to `main` and pushes to `main` or `dev`. It
-  restores locked dependencies, checks formatting, builds with warnings treated
-  as errors, runs tests with coverage, and uploads test results.
-- **CD** runs on `main`, semantic version tags such as `v1.2.3`, or manually. It
-  builds a multi-architecture image and publishes it to
-  `ghcr.io/<owner>/<repository>`.
+- The single `Build, Test, and Deploy` workflow runs quality checks on pull
+  requests and pushes. It restores locked dependencies and repository tools,
+  checks formatting, builds, tests, verifies EF migrations, validates the IIS
+  package, and uploads diagnostic logs.
+- Successful pushes to `main` deploy the verified package to Somee and publish
+  the multi-architecture container image to `ghcr.io/<owner>/<repository>`.
+- Semantic version tags such as `v1.2.3` publish the container image without a
+  Somee production deployment.
 - **Dependabot** checks NuGet packages, GitHub Actions, and base images weekly.
 
 After the first image is published, set its package visibility and deployment
-permissions in GitHub Packages. Add a deployment job to `cd.yml` once the target
-runtime (for example Azure Container Apps, AWS ECS, or Kubernetes) is selected.
+permissions in GitHub Packages. Complete logs and test reports are available in
+the workflow's `pipeline-diagnostics-*` artifact.
