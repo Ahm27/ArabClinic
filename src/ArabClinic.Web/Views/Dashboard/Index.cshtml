@@ -1,0 +1,27 @@
+@using ArabClinic.Domain.Users
+@{
+    ViewData["Title"] = "Dashboard";
+    var role = ViewData["DashboardRole"]?.ToString() ?? ClinicRoles.Patient;
+}
+<section class="section"><div class="container py-4">
+    <div class="workspace-toolbar"><div><span class="badge bg-primary mb-2">@role</span><h1>Welcome, @User.Identity?.Name</h1><p>Your secure ArabClinic workspace.</p></div></div>
+    <div class="row g-4">
+    @if (role == ClinicRoles.Patient)
+    {
+        <div class="col-md-4"><a class="feature-tile text-decoration-none" asp-controller="Doctors" asp-action="Index"><i class="bi bi-search"></i><h3>Find a doctor</h3><p>Browse doctors and choose a specialist.</p></a></div>
+        <div class="col-md-4"><a class="feature-tile text-decoration-none" asp-controller="Appointments" asp-action="Index"><i class="bi bi-calendar2-check"></i><h3>My appointments</h3><p>Review and manage your bookings.</p></a></div>
+        <div class="col-md-4"><a class="feature-tile text-decoration-none" asp-controller="Patients" asp-action="MyProfile"><i class="bi bi-person-vcard"></i><h3>My profile</h3><p>Review your patient information.</p></a></div>
+    }
+    else if (role == ClinicRoles.Doctor)
+    {
+        <div class="col-md-6"><a class="feature-tile text-decoration-none" asp-controller="Appointments" asp-action="Index"><i class="bi bi-calendar-week"></i><h3>My appointments</h3><p>Confirm and complete your clinical schedule.</p></a></div>
+        <div class="col-md-6"><a class="feature-tile text-decoration-none" asp-controller="Notifications" asp-action="Index"><i class="bi bi-bell"></i><h3>Notifications</h3><p>Review appointment updates.</p></a></div>
+    }
+    else
+    {
+        <div class="col-md-4"><a class="feature-tile text-decoration-none" asp-controller="Patients" asp-action="Index"><i class="bi bi-people"></i><h3>Patients</h3><p>Manage patient profiles.</p></a></div>
+        <div class="col-md-4"><a class="feature-tile text-decoration-none" asp-controller="Appointments" asp-action="Index"><i class="bi bi-calendar3"></i><h3>Appointments</h3><p>Manage the clinic schedule.</p></a></div>
+        <div class="col-md-4"><a class="feature-tile text-decoration-none" asp-controller="AdminDoctors" asp-action="Index"><i class="bi bi-person-badge"></i><h3>Doctors</h3><p>Create accounts and manage access.</p></a></div>
+    }
+    </div>
+</div></section>

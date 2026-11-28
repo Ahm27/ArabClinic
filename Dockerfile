@@ -2,12 +2,17 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-COPY ["ArabClinic.sln", "Directory.Build.props", "./"]
+COPY ["ArabClinic.sln", "Directory.Build.props", "global.json", "./"]
 COPY ["src/ArabClinic.Web/ArabClinic.Web.csproj", "src/ArabClinic.Web/"]
+COPY ["src/ArabClinic.Web/packages.lock.json", "src/ArabClinic.Web/"]
 COPY ["src/ArabClinic.Application/ArabClinic.Application.csproj", "src/ArabClinic.Application/"]
+COPY ["src/ArabClinic.Application/packages.lock.json", "src/ArabClinic.Application/"]
 COPY ["src/ArabClinic.Domain/ArabClinic.Domain.csproj", "src/ArabClinic.Domain/"]
+COPY ["src/ArabClinic.Domain/packages.lock.json", "src/ArabClinic.Domain/"]
 COPY ["src/ArabClinic.Infrastructure/ArabClinic.Infrastructure.csproj", "src/ArabClinic.Infrastructure/"]
+COPY ["src/ArabClinic.Infrastructure/packages.lock.json", "src/ArabClinic.Infrastructure/"]
 COPY ["tests/ArabClinic.UnitTests/ArabClinic.UnitTests.csproj", "tests/ArabClinic.UnitTests/"]
+COPY ["tests/ArabClinic.UnitTests/packages.lock.json", "tests/ArabClinic.UnitTests/"]
 RUN dotnet restore ArabClinic.sln --locked-mode
 
 COPY . .

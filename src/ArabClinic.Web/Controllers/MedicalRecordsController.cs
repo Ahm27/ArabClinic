@@ -1,14 +1,19 @@
+using System.Security.Claims;
+
 using ArabClinic.Application.Appointments;
 using ArabClinic.Application.Doctors;
 using ArabClinic.Application.MedicalRecords;
 using ArabClinic.Application.Patients;
+using ArabClinic.Domain.Users;
 using ArabClinic.Web.Models.MedicalRecords;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace ArabClinic.Web.Controllers;
 
+[Authorize]
 public sealed class MedicalRecordsController(
     IMedicalRecordService medicalRecordService,
     IAppointmentService appointmentService,
@@ -20,9 +25,15 @@ public sealed class MedicalRecordsController(
     public async Task<IActionResult> VisitDetails(int id, CancellationToken cancellationToken)
     {
         var visit = await medicalVisitReadService.GetByIdAsync(id, cancellationToken);
-        return visit is null ? NotFound() : View(visit);
+        if (visit is null) return NotFound();
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var allowed = User.IsInRole(ClinicRoles.Admin)
+            || (User.IsInRole(ClinicRoles.Doctor) && visit.DoctorId == userId)
+            || (User.IsInRole(ClinicRoles.Patient) && visit.PatientId.ToString() == userId);
+        return allowed ? View(visit) : Forbid();
     }
 
+    [Authorize(Roles = ClinicRoles.ClinicalStaff)]
     public async Task<IActionResult> CreateVisit(Guid? patientId, CancellationToken cancellationToken)
     {
         var model = new CreateMedicalVisitViewModel
@@ -36,8 +47,10 @@ public sealed class MedicalRecordsController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = ClinicRoles.ClinicalStaff)]
     public async Task<IActionResult> CreateVisit(CreateMedicalVisitViewModel model, CancellationToken cancellationToken)
     {
+        if (User.IsInRole(ClinicRoles.Doctor)) model.DoctorId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
         if (!ModelState.IsValid)
         {
             await PopulateVisitOptionsAsync(model, cancellationToken);
@@ -45,7 +58,8 @@ public sealed class MedicalRecordsController(
         }
 
         var result = await medicalVisitWriteService.CreateAsync(
-            new CreateMedicalVisitRequest(model.PatientId, model.DoctorId, model.AppointmentId, model.VisitDate, model.Summary),
+            new CreateMedicalVisitRequest(model.PatientId, model.DoctorId, model.AppointmentId, model.VisitDate,
+                model.Summary, model.Diagnosis, model.Symptoms, model.TreatmentNotes, model.FollowUpNotes),
             cancellationToken);
 
         if (!result.Success)
@@ -67,6 +81,12 @@ public sealed class MedicalRecordsController(
             return NotFound();
         }
 
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var allowed = User.IsInRole(ClinicRoles.Admin)
+            || (User.IsInRole(ClinicRoles.Patient) && record.PatientId.ToString() == userId)
+            || (User.IsInRole(ClinicRoles.Doctor) && (await appointmentService.GetByIdAsync(record.AppointmentId, cancellationToken))?.DoctorId == userId);
+        if (!allowed) return Forbid();
+
         return View(record);
     }
 
@@ -81,6 +101,7 @@ public sealed class MedicalRecordsController(
         return View(nameof(Details), record);
     }
 
+    [Authorize(Roles = ClinicRoles.ClinicalStaff)]
     public async Task<IActionResult> Create(int appointmentId, CancellationToken cancellationToken)
     {
         var app = await appointmentService.GetByIdAsync(appointmentId, cancellationToken);
@@ -88,6 +109,7 @@ public sealed class MedicalRecordsController(
         {
             return NotFound();
         }
+        if (User.IsInRole(ClinicRoles.Doctor) && app.DoctorId != User.FindFirstValue(ClaimTypes.NameIdentifier)) return Forbid();
 
         ViewBag.Appointment = app;
         return View(new CreateMedicalRecordViewModel { AppointmentId = appointmentId });
@@ -95,8 +117,12 @@ public sealed class MedicalRecordsController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = ClinicRoles.ClinicalStaff)]
     public async Task<IActionResult> Create(CreateMedicalRecordViewModel model, CancellationToken cancellationToken)
     {
+        var target = await appointmentService.GetByIdAsync(model.AppointmentId, cancellationToken);
+        if (target is null) return NotFound();
+        if (User.IsInRole(ClinicRoles.Doctor) && target.DoctorId != User.FindFirstValue(ClaimTypes.NameIdentifier)) return Forbid();
         if (!ModelState.IsValid)
         {
             var app = await appointmentService.GetByIdAsync(model.AppointmentId, cancellationToken);

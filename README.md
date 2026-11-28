@@ -6,7 +6,7 @@ ArabClinic is a server-rendered ASP.NET Core MVC application organized with clea
 
 ```text
 src/
-  ArabClinic.Api/             MVC controllers, Razor views, and application composition
+  ArabClinic.Web/             MVC controllers, Razor views, and application composition
   ArabClinic.Application/     Use cases and application contracts
   ArabClinic.Domain/          Entities and domain rules
   ArabClinic.Infrastructure/  Persistence and external integrations
@@ -14,18 +14,27 @@ tests/
   ArabClinic.UnitTests/       Fast domain and application tests
 ```
 
-Dependencies point inward: `Api -> Application/Infrastructure`,
+Dependencies point inward: `Web -> Application/Infrastructure`,
 `Infrastructure -> Application/Domain`, and `Application -> Domain`.
 
 ## Local development
 
 Requires the .NET SDK version selected by `global.json`.
 
+On macOS/Linux, SQL Server LocalDB is not available. Create the local Docker
+configuration, replace the example password, then start SQL Server. It is
+exposed on `localhost:1433`.
+
+```bash
+cp .env.example .env
+docker compose up -d db
+```
+
 ```bash
 dotnet restore
 dotnet build --configuration Release
 dotnet test --configuration Release
-dotnet run --project src/ArabClinic.Api
+dotnet run --project src/ArabClinic.Web
 ```
 
 The web application is available at the root URL. The health endpoint is
@@ -39,15 +48,16 @@ For example:
 ```bash
 dotnet user-secrets set "ConnectionStrings:ArabClinic" \
   "<your SQL Server connection string>" \
-  --project src/ArabClinic.Api
+  --project src/ArabClinic.Web
 dotnet tool restore
 dotnet ef database update \
   --project src/ArabClinic.Infrastructure \
-  --startup-project src/ArabClinic.Api
+  --startup-project src/ArabClinic.Web
 ```
 
-Authentication and authorization have not been implemented. Patient screens
-must be protected with role-based authorization before production use.
+Authentication uses Patient, Doctor, and Admin roles. Configure the first admin
+with `AdminSeed__Email`, `AdminSeed__Password`, and optionally
+`AdminSeed__FullName` in environment variables or user secrets.
 
 To run in a container:
 
@@ -56,6 +66,32 @@ docker compose up --build
 ```
 
 The web application is then available at `http://localhost:8080`.
+
+## Production deployment requirements
+
+The hosting environment must provide:
+
+- .NET 9 ASP.NET Core Hosting Bundle (IIS) or a .NET 9 container runtime.
+- SQL Server reachable by the web application.
+- `ConnectionStrings__ArabClinic` with the production SQL Server connection.
+- `AdminSeed__Email`, `AdminSeed__Password`, and optionally
+  `AdminSeed__FullName` for initial admin access. Remove the admin password from
+  the host configuration after the account has been created.
+- Persistent ASP.NET Core Data Protection keys when running more than one
+  instance, so authentication cookies survive restarts and load balancing.
+
+The application applies EF Core migrations and seeds reference data during
+startup, so the database login needs schema-change permissions during a
+deployment. Restrict those permissions afterward if migrations are managed by
+a separate release process. Never commit production connection strings or
+admin credentials to this repository.
+
+The Somee workflow additionally requires GitHub repository secrets
+`FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`, and `FTP_SERVER_DIR`. Optional
+repository variables are `FTP_PROTOCOL`, `FTP_PORT`, `SITE_BASE_URL`,
+`DEPLOY_VERIFY_RETRIES`, and `DEPLOY_VERIFY_DELAY_SECONDS`. Configure the
+application settings above in the hosting control panel; the workflow does not
+upload production secrets.
 
 ## UI template
 

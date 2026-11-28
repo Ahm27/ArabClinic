@@ -10,6 +10,8 @@ public sealed class Patient : Entity
     public string? Address { get; set; }
     public string? Allergies { get; set; }
     public string? MedicalHistory { get; set; }
+    public bool IsArchived { get; private set; }
+    public DateTime? ArchivedAt { get; private set; }
 
     public string? UserId { get; set; }
     public ApplicationUser? User { get; set; }
@@ -22,6 +24,12 @@ public sealed class Patient : Entity
     public Patient(string fullName, DateOnly dateOfBirth)
     {
         UpdateDetails(fullName, dateOfBirth);
+    }
+
+    public Patient(Guid id, string fullName, DateOnly dateOfBirth, string gender)
+        : this(fullName, dateOfBirth, gender)
+    {
+        Id = id;
     }
 
     public Patient(string fullName, DateOnly dateOfBirth, string gender, string? address = null, string? allergies = null, string? medicalHistory = null)
@@ -50,5 +58,11 @@ public sealed class Patient : Entity
         Address = address?.Trim();
         Allergies = allergies?.Trim();
         MedicalHistory = medicalHistory?.Trim();
+    }
+
+    public void Archive()
+    {
+        IsArchived = true;
+        ArchivedAt = DateTime.UtcNow;
     }
 }

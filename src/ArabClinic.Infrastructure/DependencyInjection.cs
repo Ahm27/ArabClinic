@@ -37,8 +37,10 @@ public static class DependencyInjection
 
         services.AddScoped<IPatientRepository, PatientRepository>();
         services.AddScoped<IDoctorService, DoctorService>();
+        services.AddScoped<IAdminDoctorService, AdminDoctorService>();
         services.AddScoped<ISpecializationService, SpecializationService>();
         services.AddScoped<IAppointmentService, AppointmentService>();
+        services.AddScoped<IAvailabilityService, AvailabilityService>();
         services.AddScoped<IMedicalRecordService, MedicalRecordService>();
         services.AddScoped<IMedicalVisitReadService, MedicalVisitReadService>();
         services.AddScoped<IMedicalVisitWriteService, MedicalVisitWriteService>();

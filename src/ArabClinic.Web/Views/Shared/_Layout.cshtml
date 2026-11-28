@@ -1,5 +1,11 @@
+@using ArabClinic.Domain.Users
+@using System.Globalization
+@{
+    var isArabic = CultureInfo.CurrentUICulture.Name.StartsWith("ar", StringComparison.OrdinalIgnoreCase);
+    string T(string english, string arabic) => isArabic ? arabic : english;
+}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@(isArabic ? "ar" : "en")" dir="@(isArabic ? "rtl" : "ltr")">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -28,9 +34,16 @@
                 </div>
                 <div class="d-none d-md-flex align-items-center gap-3">
                     <span><i class="bi bi-clock me-1"></i> Open daily, 8:00 AM–10:00 PM</span>
-                    <a asp-controller="Notifications" asp-action="Index" class="text-white text-decoration-none">
-                        <i class="bi bi-bell-fill"></i> Notifications
-                    </a>
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <a asp-controller="Notifications" asp-action="Index" class="text-white text-decoration-none"><i class="bi bi-bell-fill"></i> @T("Notifications", "الإشعارات")</a>
+                    }
+                    <form asp-controller="Culture" asp-action="Set" method="post" class="d-flex align-items-center m-0">
+                        <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                        <button name="culture" value="@(isArabic ? "en-US" : "ar-EG")" class="btn btn-sm btn-outline-light rounded-pill py-0 px-2" aria-label="Change language">
+                            <i class="bi bi-translate me-1"></i>@(isArabic ? "English" : "العربية")
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -42,26 +55,40 @@
                 </a>
                 <nav id="navmenu" class="navmenu">
                     <ul>
-                        <li><a asp-controller="Home" asp-action="Index">Home</a></li>
-                        <li><a asp-controller="Doctors" asp-action="Index">Doctors</a></li>
-                        <li><a asp-controller="Departments" asp-action="Index">Departments</a></li>
-                        <li><a asp-controller="Appointments" asp-action="Index">Appointments</a></li>
-                        <li><a asp-controller="Patients" asp-action="Index">Patients</a></li>
-                        <li><a asp-controller="Invoices" asp-action="Index">Billing</a></li>
-                        <li class="dropdown"><a href="#"><span>More</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
-                            <ul>
-                                <li><a asp-controller="Home" asp-action="About">About Clinic</a></li>
-                                <li><a asp-controller="Home" asp-action="Services">Services</a></li>
-                                <li><a asp-controller="Notifications" asp-action="Index">Notification Center</a></li>
-                                <li><a asp-controller="Home" asp-action="Contact">Contact & Location</a></li>
-                            </ul>
-                        </li>
+                        <li><a asp-controller="Home" asp-action="Index">@T("Home", "الرئيسية")</a></li>
+                        <li><a asp-controller="Doctors" asp-action="Index">@T("Doctors", "الأطباء")</a></li>
+                        <li><a asp-controller="Departments" asp-action="Index">@T("Departments", "التخصصات")</a></li>
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li><a asp-controller="Dashboard" asp-action="Index">@T("Dashboard", "لوحة التحكم")</a></li>
+                            <li><a asp-controller="Appointments" asp-action="Index">@T("Appointments", "المواعيد")</a></li>
+                            @if (User.IsInRole(ClinicRoles.Admin))
+                            {
+                                <li><a asp-controller="Patients" asp-action="Index">@T("Patients", "المرضى")</a></li>
+                                <li><a asp-controller="Invoices" asp-action="Index">@T("Billing", "الحسابات")</a></li>
+                            }
+                            <li><a asp-controller="Notifications" asp-action="Index">@T("Notifications", "الإشعارات")</a></li>
+                        }
+                        else
+                        {
+                            <li><a asp-controller="Home" asp-action="About">@T("About", "عن العيادة")</a></li>
+                            <li><a asp-controller="Account" asp-action="Login">@T("Sign in", "تسجيل الدخول")</a></li>
+                            <li><a asp-controller="Account" asp-action="Register">@T("Sign up", "إنشاء حساب")</a></li>
+                        }
                     </ul>
                     <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
                 </nav>
-                <a asp-controller="Appointments" asp-action="Create" class="btn btn-primary d-none d-lg-inline-block rounded-pill px-4">
-                    <i class="bi bi-calendar2-plus me-1"></i> Book Appointment
-                </a>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="d-none d-lg-flex align-items-center gap-2">
+                        <a asp-controller="Account" asp-action="Profile" class="btn btn-outline-primary rounded-pill">@User.Identity.Name</a>
+                        <button class="btn btn-primary rounded-pill">@T("Sign out", "تسجيل الخروج")</button>
+                    </form>
+                }
+                else
+                {
+                    <a asp-controller="Account" asp-action="Login" class="btn btn-primary d-none d-lg-inline-block rounded-pill px-4">@T("Sign in", "تسجيل الدخول")</a>
+                }
             </div>
         </div>
     </header>
@@ -116,6 +143,11 @@
         <div class="container copyright text-center py-4 border-top">
             <p class="mb-1">&copy; @DateTime.UtcNow.Year <strong>ArabClinic</strong>. All Rights Reserved.</p>
             <div class="text-muted small">Modern Healthcare Management System</div>
+            <form asp-controller="Culture" asp-action="Set" method="post" class="mt-2">
+                <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                <button name="culture" value="en-US" class="btn btn-sm btn-link">English</button>
+                <button name="culture" value="ar-EG" class="btn btn-sm btn-link">العربية</button>
+            </form>
         </div>
     </footer>
 

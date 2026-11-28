@@ -9,6 +9,10 @@ public sealed record MedicalVisitDto(
     int? AppointmentId,
     DateTime VisitDate,
     string Summary,
+    string Diagnosis,
+    string? Symptoms,
+    string? TreatmentNotes,
+    string? FollowUpNotes,
     DateTime CreatedAt,
     DateTime UpdatedAt);
 
@@ -17,7 +21,11 @@ public sealed record CreateMedicalVisitRequest(
     string DoctorId,
     int? AppointmentId,
     DateTime VisitDate,
-    string Summary);
+    string Summary,
+    string Diagnosis = "Unspecified",
+    string? Symptoms = null,
+    string? TreatmentNotes = null,
+    string? FollowUpNotes = null);
 
 public interface IMedicalVisitReadService
 {

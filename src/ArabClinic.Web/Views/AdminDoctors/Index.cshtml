@@ -1,0 +1,6 @@
+@model IReadOnlyList<DoctorDto>
+@{ ViewData["Title"] = "Doctor administration"; }
+<section class="section"><div class="container py-4"><div class="workspace-toolbar"><div><h1>Doctor administration</h1><p>Create accounts and control access.</p></div><a asp-action="Create" class="btn btn-primary rounded-pill">Add doctor</a></div>
+<div class="patient-table-card table-responsive"><table class="table patient-table mb-0"><thead><tr><th>Doctor</th><th>Specialization</th><th>Slot</th><th>Status</th><th></th></tr></thead><tbody>
+@foreach (var doctor in Model) { <tr><td>@doctor.FullName<br/><small>@doctor.Email</small></td><td>@doctor.SpecializationName</td><td>@doctor.SlotDurationMinutes min</td><td>@(doctor.IsApproved ? "Active" : "Inactive")</td><td><form asp-action="SetActive" method="post"><input type="hidden" name="id" value="@doctor.DoctorId"/><input type="hidden" name="active" value="@(!doctor.IsApproved)"/><button class="btn btn-sm @(doctor.IsApproved ? "btn-outline-danger" : "btn-outline-success")">@(doctor.IsApproved ? "Deactivate" : "Activate")</button></form></td></tr> }
+</tbody></table></div></div></section>

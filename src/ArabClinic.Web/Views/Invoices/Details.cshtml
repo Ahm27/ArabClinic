@@ -81,7 +81,7 @@
             </div>
 
             <!-- Record Payment Form if Balance Remaining -->
-            @if (Model.RemainingBalance > 0)
+            @if (Model.RemainingBalance > 0 && User.IsInRole("Admin"))
             {
                 <div class="card border-0 shadow-sm rounded-4 p-4">
                     <h5 class="fw-bold mb-3"><i class="bi bi-credit-card text-primary me-2"></i> Process Payment</h5>
@@ -108,6 +108,18 @@
                             Record Payment
                         </button>
                     </form>
+                </div>
+            }
+            else if (Model.RemainingBalance > 0)
+            {
+                <div class="alert alert-info rounded-4" role="status">
+                    <div class="d-flex gap-3 align-items-start">
+                        <i class="bi bi-info-circle-fill fs-4"></i>
+                        <div>
+                            <strong>Payment is pending</strong>
+                            <p class="mb-0 mt-1">Online payment is not available yet. Please pay at the clinic or contact the billing desk.</p>
+                        </div>
+                    </div>
                 </div>
             }
         </div>

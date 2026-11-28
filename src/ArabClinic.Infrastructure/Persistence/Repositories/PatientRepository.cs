@@ -11,6 +11,7 @@ public sealed class PatientRepository(ArabClinicDbContext dbContext) : IPatientR
         CancellationToken cancellationToken = default) =>
         await dbContext.Patients
             .AsNoTracking()
+            .Where(patient => !patient.IsArchived)
             .OrderBy(patient => patient.FullName)
             .ToListAsync(cancellationToken);
 
@@ -18,7 +19,7 @@ public sealed class PatientRepository(ArabClinicDbContext dbContext) : IPatientR
         Guid id,
         CancellationToken cancellationToken = default) =>
         dbContext.Patients.SingleOrDefaultAsync(
-            patient => patient.Id == id,
+            patient => patient.Id == id && !patient.IsArchived,
             cancellationToken);
 
     public async Task AddAsync(

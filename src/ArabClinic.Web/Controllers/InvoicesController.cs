@@ -1,11 +1,17 @@
-using ArabClinic.Application.Invoices;
+using System.Security.Claims;
 
+using ArabClinic.Application.Invoices;
+using ArabClinic.Domain.Users;
+
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ArabClinic.Web.Controllers;
 
+[Authorize]
 public sealed class InvoicesController(IBillingService billingService) : Controller
 {
+    [Authorize(Roles = ClinicRoles.Admin)]
     public async Task<IActionResult> Index(string? status, CancellationToken cancellationToken)
     {
         ViewData["CurrentStatus"] = status ?? "All";
@@ -20,6 +26,7 @@ public sealed class InvoicesController(IBillingService billingService) : Control
         {
             return NotFound();
         }
+        if (!User.IsInRole(ClinicRoles.Admin) && invoice.PatientId.ToString() != User.FindFirstValue(ClaimTypes.NameIdentifier)) return Forbid();
 
         return View(invoice);
     }
@@ -37,6 +44,7 @@ public sealed class InvoicesController(IBillingService billingService) : Control
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = ClinicRoles.Admin)]
     public async Task<IActionResult> Pay(RecordPaymentRequest request, CancellationToken cancellationToken)
     {
         var (success, errorMessage) = await billingService.RecordPaymentAsync(request, cancellationToken);

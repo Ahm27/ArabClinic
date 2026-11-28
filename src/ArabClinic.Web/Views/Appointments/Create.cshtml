@@ -79,7 +79,9 @@
 
                         <div class="col-md-6">
                             <label asp-for="PreferredTime" class="form-label fw-semibold">Preferred Time <span class="text-danger">*</span></label>
-                            <input asp-for="PreferredTime" class="form-control form-control-lg rounded-3" type="time" />
+                            <select asp-for="PreferredTime" class="form-select form-select-lg rounded-3" id="available-slots">
+                                <option value="">Select doctor and date first</option>
+                            </select>
                             <span asp-validation-for="PreferredTime" class="text-danger small"></span>
                         </div>
 
@@ -107,4 +109,27 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const doctor = document.getElementById('DoctorId');
+            const date = document.getElementById('PreferredDate');
+            const slots = document.getElementById('available-slots');
+            async function loadSlots() {
+                slots.innerHTML = '<option value="">Loading available slots…</option>';
+                if (!doctor.value || !date.value) {
+                    slots.innerHTML = '<option value="">Select doctor and date first</option>';
+                    return;
+                }
+                const url = `@Url.Action("AvailableSlots")?doctorId=${encodeURIComponent(doctor.value)}&date=${encodeURIComponent(date.value)}`;
+                const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                const data = response.ok ? await response.json() : [];
+                slots.innerHTML = data.length
+                    ? '<option value="">Choose an available slot</option>' + data.map(x => `<option value="${x.value}">${x.label}</option>`).join('')
+                    : '<option value="">No slots available</option>';
+            }
+            doctor.addEventListener('change', loadSlots);
+            date.addEventListener('change', loadSlots);
+            if (doctor.value && date.value) loadSlots();
+        })();
+    </script>
 }

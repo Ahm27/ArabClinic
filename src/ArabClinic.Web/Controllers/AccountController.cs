@@ -19,10 +19,18 @@ public sealed class AccountController(
     }
 
     [AllowAnonymous]
+    public IActionResult AccessDenied() => View();
+
+    [AllowAnonymous]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Register(RegisterViewModel model)
     {
+        if (!model.AcceptTerms)
+        {
+            ModelState.AddModelError(nameof(model.AcceptTerms), "You must accept the terms and privacy policy.");
+        }
+
         if (!ModelState.IsValid)
         {
             return View(model);
@@ -32,6 +40,8 @@ public sealed class AccountController(
             model.FullName,
             model.Email,
             model.PhoneNumber,
+            model.DateOfBirth!.Value,
+            model.Gender,
             model.Password);
 
         var result = await accountService.RegisterAsync(request);
@@ -46,7 +56,7 @@ public sealed class AccountController(
             return View(model);
         }
 
-        return RedirectToAction("Index", "Home");
+        return RedirectToAction("Index", "Dashboard");
     }
 
     [AllowAnonymous]
@@ -83,7 +93,7 @@ public sealed class AccountController(
             return View(model);
         }
 
-        return RedirectToAction("Index", "Home");
+        return RedirectToAction("Index", "Dashboard");
     }
 
     [Authorize]

@@ -143,24 +143,30 @@ public sealed class AppointmentService(ArabClinicDbContext dbContext) : IAppoint
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var start = request.StartDateTime;
-        var end = request.EndDateTime ?? start.AddMinutes(30);
-
-        if (end <= start)
-        {
+        var start = request.StartDateTime.Kind == DateTimeKind.Utc
+            ? request.StartDateTime
+            : request.StartDateTime.ToUniversalTime();
+        if (request.EndDateTime.HasValue && request.EndDateTime.Value <= request.StartDateTime)
             return (false, "Appointment end time must be after start time.", 0);
-        }
+        if (start <= DateTime.UtcNow) return (false, "Appointments must be booked in the future.", 0);
 
         var doctor = await dbContext.Doctors
             .Include(d => d.User)
+            .Include(d => d.Schedules)
             .Include(d => d.DaysOff)
             .FirstOrDefaultAsync(d => d.DoctorId == request.DoctorId, cancellationToken);
 
-        if (doctor == null)
+        if (doctor == null || !doctor.IsApproved)
         {
             return (false, "Selected doctor was not found.", 0);
         }
 
+        var allowedDurations = new[] { 15, 20, 30, 45, 60 };
+        var duration = allowedDurations.Contains(doctor.SlotDurationMinutes) ? doctor.SlotDurationMinutes : 30;
+        var end = start.AddMinutes(duration);
+        var cairo = TimeZoneInfo.FindSystemTimeZoneById("Africa/Cairo");
+        var localStart = TimeZoneInfo.ConvertTimeFromUtc(start, cairo);
+        var localEnd = TimeZoneInfo.ConvertTimeFromUtc(end, cairo);
         // Check Doctor Days Off
         var isDayOff = doctor.DaysOff.Any(d =>
             start < d.EndDateTime && end > d.StartDateTime);
@@ -168,6 +174,13 @@ public sealed class AppointmentService(ArabClinicDbContext dbContext) : IAppoint
         if (isDayOff)
         {
             return (false, $"{doctor.User?.FullName ?? "The doctor"} is unavailable during this time (scheduled day off).", 0);
+        }
+
+        if (doctor.Schedules.Count > 0)
+        {
+            var schedule = doctor.Schedules.FirstOrDefault(item => item.DayOfWeek == localStart.DayOfWeek);
+            if (schedule is null || localStart.TimeOfDay < schedule.StartTime || localEnd.TimeOfDay > schedule.EndTime)
+                return (false, "The selected time is outside the doctor's working hours.", 0);
         }
 
         // Check for overlapping appointments (including concurrent requests)
@@ -189,6 +202,8 @@ public sealed class AppointmentService(ArabClinicDbContext dbContext) : IAppoint
         if (request.PatientId.HasValue && request.PatientId.Value != Guid.Empty)
         {
             patientId = request.PatientId.Value;
+            if (!await dbContext.Patients.AnyAsync(patient => patient.Id == patientId && !patient.IsArchived, cancellationToken))
+                return (false, "Patient profile was not found.", 0);
         }
         else
         {
@@ -247,7 +262,14 @@ public sealed class AppointmentService(ArabClinicDbContext dbContext) : IAppoint
             CreatedAt = DateTime.UtcNow
         }, cancellationToken);
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            return (false, "This slot was just booked. Please select another available time.", 0);
+        }
 
         return (true, null, appointment.AppointmentId);
     }
@@ -262,6 +284,16 @@ public sealed class AppointmentService(ArabClinicDbContext dbContext) : IAppoint
         {
             return false;
         }
+
+        var allowed = app.Status switch
+        {
+            "Pending" => new[] { "Confirmed", "Rejected", "Cancelled" },
+            "Scheduled" => new[] { "Confirmed", "Completed", "Cancelled" },
+            "Confirmed" => new[] { "Completed", "Cancelled" },
+            _ => Array.Empty<string>()
+        };
+        if (!allowed.Contains(newStatus, StringComparer.Ordinal)) return false;
+        if (!await dbContext.Users.AnyAsync(user => user.Id == changedByUserId, cancellationToken)) return false;
 
         var old = app.Status;
         app.Status = newStatus;

@@ -10,6 +10,7 @@ public sealed record DoctorDto(
     decimal ConsultationFee,
     string Location,
     bool IsApproved,
+    int SlotDurationMinutes,
     IReadOnlyList<DoctorScheduleDto> Schedules,
     IReadOnlyList<DoctorDayOffDto> DaysOff);
 

@@ -71,6 +71,7 @@ internal sealed class DoctorConfiguration : IEntityTypeConfiguration<Doctor>
         builder.HasKey(d => d.DoctorId);
         builder.Property(d => d.ConsultationFee).HasColumnType("decimal(18,2)");
         builder.Property(d => d.Location).HasMaxLength(200).IsRequired();
+        builder.Property(d => d.SlotDurationMinutes).HasDefaultValue(30);
 
         builder.HasMany(d => d.Schedules)
             .WithOne(s => s.Doctor)
@@ -116,6 +117,9 @@ internal sealed class AppointmentConfiguration : IEntityTypeConfiguration<Appoin
         builder.HasKey(a => a.AppointmentId);
         builder.Property(a => a.Status).HasMaxLength(50).IsRequired();
         builder.Property(a => a.Notes).HasMaxLength(1000);
+        builder.HasIndex(a => new { a.DoctorId, a.StartDateTime })
+            .IsUnique()
+            .HasFilter("[Status] <> N'Cancelled'");
 
         builder.HasMany(a => a.StatusHistories)
             .WithOne(h => h.Appointment)
@@ -181,7 +185,12 @@ internal sealed class MedicalVisitConfiguration : IEntityTypeConfiguration<Medic
         builder.HasKey(visit => visit.MedicalVisitId);
         builder.Property(visit => visit.DoctorId).HasMaxLength(450).IsRequired();
         builder.Property(visit => visit.Summary).HasMaxLength(4000).IsRequired();
+        builder.Property(visit => visit.Diagnosis).HasMaxLength(500).IsRequired();
+        builder.Property(visit => visit.Symptoms).HasMaxLength(1000);
+        builder.Property(visit => visit.TreatmentNotes).HasMaxLength(2000);
+        builder.Property(visit => visit.FollowUpNotes).HasMaxLength(2000);
         builder.HasIndex(visit => new { visit.PatientId, visit.VisitDate });
+        builder.HasIndex(visit => visit.AppointmentId).IsUnique().HasFilter("[AppointmentId] IS NOT NULL");
 
         builder.HasOne(visit => visit.Patient)
             .WithMany()

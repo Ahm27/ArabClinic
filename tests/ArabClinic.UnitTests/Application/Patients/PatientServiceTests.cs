@@ -76,7 +76,7 @@ public sealed class PatientServiceTests
     }
 
     [Fact]
-    public async Task DeleteRemovesExistingPatient()
+    public async Task DeleteArchivesExistingPatient()
     {
         var patient = new Patient("Ahmed Ali", new DateOnly(1990, 1, 1));
         var repository = new FakePatientRepository(patient);
@@ -85,7 +85,7 @@ public sealed class PatientServiceTests
         var deleted = await service.DeleteAsync(patient.Id);
 
         Assert.True(deleted);
-        Assert.Empty(repository.Patients);
+        Assert.True(patient.IsArchived);
         Assert.Equal(1, repository.SaveCount);
     }
 

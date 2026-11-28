@@ -53,6 +53,7 @@ public sealed class DoctorService(ArabClinicDbContext dbContext) : IDoctorServic
             d.ConsultationFee,
             d.Location,
             d.IsApproved,
+            d.SlotDurationMinutes,
             d.Schedules.Select(s => new DoctorScheduleDto(s.ScheduleId, s.DayOfWeek, s.StartTime, s.EndTime)).ToList(),
             d.DaysOff.Select(o => new DoctorDayOffDto(o.DayOffId, o.StartDateTime, o.EndDateTime, o.Reason)).ToList());
 }

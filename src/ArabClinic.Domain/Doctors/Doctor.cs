@@ -7,6 +7,7 @@ public class Doctor
     public decimal ConsultationFee { get; set; }
     public string Location { get; set; } = string.Empty;
     public bool IsApproved { get; set; } = true;
+    public int SlotDurationMinutes { get; set; } = 30;
 
     // Navigations
     public Users.ApplicationUser? User { get; set; }

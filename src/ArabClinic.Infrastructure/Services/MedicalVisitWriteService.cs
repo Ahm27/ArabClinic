@@ -1,5 +1,6 @@
 using ArabClinic.Application.MedicalRecords;
 using ArabClinic.Domain.MedicalRecords;
+using ArabClinic.Domain.Notifications;
 using ArabClinic.Infrastructure.Persistence;
 
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +26,7 @@ public sealed class MedicalVisitWriteService(ArabClinicDbContext dbContext) : IM
         {
             return (false, "A visit summary is required.", 0);
         }
+        if (string.IsNullOrWhiteSpace(request.Diagnosis)) return (false, "A diagnosis is required.", 0);
 
         var patientExists = await dbContext.Patients.AnyAsync(patient => patient.Id == request.PatientId, cancellationToken);
         if (!patientExists)
@@ -40,6 +42,8 @@ public sealed class MedicalVisitWriteService(ArabClinicDbContext dbContext) : IM
 
         if (request.AppointmentId.HasValue)
         {
+            if (await dbContext.MedicalVisits.AnyAsync(visit => visit.AppointmentId == request.AppointmentId.Value, cancellationToken))
+                return (false, "A clinical visit already exists for this appointment.", 0);
             var appointmentMatches = await dbContext.Appointments.AnyAsync(appointment =>
                 appointment.AppointmentId == request.AppointmentId.Value &&
                 appointment.PatientId == request.PatientId &&
@@ -59,11 +63,21 @@ public sealed class MedicalVisitWriteService(ArabClinicDbContext dbContext) : IM
             AppointmentId = request.AppointmentId,
             VisitDate = request.VisitDate,
             Summary = request.Summary.Trim(),
+            Diagnosis = request.Diagnosis.Trim(),
+            Symptoms = request.Symptoms?.Trim(),
+            TreatmentNotes = request.TreatmentNotes?.Trim(),
+            FollowUpNotes = request.FollowUpNotes?.Trim(),
             CreatedAt = now,
             UpdatedAt = now
         };
 
         await dbContext.MedicalVisits.AddAsync(visit, cancellationToken);
+        await dbContext.Notifications.AddAsync(new Notification
+        {
+            UserId = request.PatientId.ToString(),
+            Message = $"A clinical visit was added to your medical history for {request.VisitDate:dd MMM yyyy}.",
+            CreatedAt = now
+        }, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
         return (true, null, visit.MedicalVisitId);
     }

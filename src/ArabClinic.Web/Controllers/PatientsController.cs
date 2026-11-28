@@ -1,17 +1,23 @@
+using System.Security.Claims;
+
 using ArabClinic.Application.Appointments;
 using ArabClinic.Application.MedicalRecords;
 using ArabClinic.Application.Patients;
+using ArabClinic.Domain.Users;
 using ArabClinic.Web.Models.Patients;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ArabClinic.Web.Controllers;
 
+[Authorize]
 public sealed class PatientsController(
     IPatientService patientService,
     IAppointmentService appointmentService,
     IMedicalVisitReadService medicalVisitReadService) : Controller
 {
+    [Authorize(Roles = ClinicRoles.Admin)]
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
         var patients = await patientService.GetAllAsync(cancellationToken);
@@ -25,6 +31,14 @@ public sealed class PatientsController(
         if (patient is null)
         {
             return NotFound();
+        }
+
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (User.IsInRole(ClinicRoles.Patient) && id.ToString() != userId) return Forbid();
+        if (User.IsInRole(ClinicRoles.Doctor))
+        {
+            var linked = await appointmentService.GetAllAsync(doctorId: userId, patientId: id, cancellationToken: cancellationToken);
+            if (linked.Count == 0) return Forbid();
         }
 
         var appointments = await appointmentService.GetAllAsync(patientId: id, cancellationToken: cancellationToken);
@@ -42,10 +56,18 @@ public sealed class PatientsController(
             visits));
     }
 
+    public IActionResult MyProfile()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return Guid.TryParse(userId, out var id) ? RedirectToAction(nameof(Details), new { id }) : Challenge();
+    }
+
+    [Authorize(Roles = ClinicRoles.Admin)]
     public IActionResult Create() => View(new PatientFormViewModel());
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = ClinicRoles.Admin)]
     public async Task<IActionResult> Create(PatientFormViewModel model, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
@@ -75,8 +97,10 @@ public sealed class PatientsController(
         }
     }
 
+    [Authorize(Roles = ClinicRoles.Admin + "," + ClinicRoles.Patient)]
     public async Task<IActionResult> Edit(Guid id, CancellationToken cancellationToken)
     {
+        if (User.IsInRole(ClinicRoles.Patient) && id.ToString() != User.FindFirstValue(ClaimTypes.NameIdentifier)) return Forbid();
         var patient = await patientService.GetByIdAsync(id, cancellationToken);
         if (patient is null)
         {
@@ -96,8 +120,10 @@ public sealed class PatientsController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = ClinicRoles.Admin + "," + ClinicRoles.Patient)]
     public async Task<IActionResult> Edit(Guid id, PatientFormViewModel model, CancellationToken cancellationToken)
     {
+        if (User.IsInRole(ClinicRoles.Patient) && id.ToString() != User.FindFirstValue(ClaimTypes.NameIdentifier)) return Forbid();
         if (!ModelState.IsValid)
         {
             return View(model);
@@ -131,6 +157,7 @@ public sealed class PatientsController(
         }
     }
 
+    [Authorize(Roles = ClinicRoles.Admin)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         var patient = await patientService.GetByIdAsync(id, cancellationToken);
@@ -141,10 +168,11 @@ public sealed class PatientsController(
 
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = ClinicRoles.Admin)]
     public async Task<IActionResult> DeleteConfirmed(Guid id, CancellationToken cancellationToken)
     {
         await patientService.DeleteAsync(id, cancellationToken);
-        TempData["PatientMessage"] = "Patient deleted successfully.";
+        TempData["PatientMessage"] = "Patient archived successfully.";
         return RedirectToAction(nameof(Index));
     }
 }

@@ -8,6 +8,10 @@ public sealed class MedicalVisit
     public int? AppointmentId { get; set; }
     public DateTime VisitDate { get; set; }
     public string Summary { get; set; } = string.Empty;
+    public string Diagnosis { get; set; } = string.Empty;
+    public string? Symptoms { get; set; }
+    public string? TreatmentNotes { get; set; }
+    public string? FollowUpNotes { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 

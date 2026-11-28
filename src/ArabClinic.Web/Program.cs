@@ -1,9 +1,12 @@
+using System.Globalization;
+
 using ArabClinic.Application;
 using ArabClinic.Domain.Users;
 using ArabClinic.Infrastructure;
 using ArabClinic.Infrastructure.Persistence;
 
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,11 +15,31 @@ builder.Services
     .AddApplication()
     .AddInfrastructure(builder.Configuration);
 builder.Services
-    .AddIdentity<ApplicationUser, IdentityRole>()
+    .AddIdentity<ApplicationUser, IdentityRole>(options =>
+    {
+        options.Password.RequiredLength = 8;
+        options.Password.RequireDigit = true;
+        options.Password.RequireUppercase = true;
+        options.Lockout.MaxFailedAccessAttempts = 5;
+        options.User.RequireUniqueEmail = true;
+    })
     .AddEntityFrameworkStores<ArabClinicDbContext>()
     .AddDefaultTokenProviders();
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Account/Login";
+    options.AccessDeniedPath = "/Account/AccessDenied";
+    options.SlidingExpiration = true;
+});
 builder.Services.AddControllersWithViews();
 builder.Services.AddHealthChecks();
+builder.Services.Configure<RequestLocalizationOptions>(options =>
+{
+    var cultures = new[] { new CultureInfo("en-US"), new CultureInfo("ar-EG") };
+    options.DefaultRequestCulture = new RequestCulture("en-US");
+    options.SupportedCultures = cultures;
+    options.SupportedUICultures = cultures;
+});
 
 var app = builder.Build();
 
@@ -38,6 +61,7 @@ using (var scope = app.Services.CreateScope())
         }
 
         await DbInitializer.SeedAsync(db);
+        await IdentityInitializer.SeedAsync(scope.ServiceProvider, builder.Configuration);
         Console.WriteLine("[Startup] Database seeded.");
     }
     catch (Exception ex)
@@ -57,6 +81,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+app.UseRequestLocalization();
 app.UseAuthentication();
 app.UseAuthorization();
 

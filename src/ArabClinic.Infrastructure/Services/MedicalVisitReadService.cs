@@ -47,6 +47,10 @@ internal static class MedicalVisitMapper
         visit.AppointmentId,
         visit.VisitDate,
         visit.Summary,
+        visit.Diagnosis,
+        visit.Symptoms,
+        visit.TreatmentNotes,
+        visit.FollowUpNotes,
         visit.CreatedAt,
         visit.UpdatedAt);
 }

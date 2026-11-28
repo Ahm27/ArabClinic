@@ -59,7 +59,7 @@ public sealed class PatientService(IPatientRepository repository) : IPatientServ
             return false;
         }
 
-        repository.Remove(patient);
+        patient.Archive();
         await repository.SaveChangesAsync(cancellationToken);
         return true;
     }

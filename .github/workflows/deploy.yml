@@ -52,7 +52,7 @@ jobs:
 
       - name: Publish MVC application
         run: >-
-          dotnet publish src/ArabClinic.Api/ArabClinic.Api.csproj
+          dotnet publish src/ArabClinic.Web/ArabClinic.Web.csproj
           --configuration Release
           --no-build
           --no-restore
@@ -69,9 +69,9 @@ jobs:
 
           required_files=(
             "$PUBLISH_DIR/web.config"
-            "$PUBLISH_DIR/ArabClinic.Api.dll"
-            "$PUBLISH_DIR/ArabClinic.Api.deps.json"
-            "$PUBLISH_DIR/ArabClinic.Api.runtimeconfig.json"
+            "$PUBLISH_DIR/ArabClinic.Web.dll"
+            "$PUBLISH_DIR/ArabClinic.Web.deps.json"
+            "$PUBLISH_DIR/ArabClinic.Web.runtimeconfig.json"
             "$PUBLISH_DIR/wwwroot/assets/css/main.css"
           )
 

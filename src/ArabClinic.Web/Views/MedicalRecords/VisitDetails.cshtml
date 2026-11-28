@@ -27,7 +27,10 @@
             <div class="col-md-6"><span class="text-muted">Doctor</span><div class="fw-semibold">@Model.DoctorName</div></div>
             <div class="col-md-6"><span class="text-muted">Appointment</span><div class="fw-semibold">@(Model.AppointmentId.HasValue ? $"#{Model.AppointmentId}" : "Standalone visit")</div></div>
         </div>
+        <h5 class="fw-bold">Diagnosis</h5><p>@Model.Diagnosis</p>
+        <h5 class="fw-bold">Symptoms</h5><p>@(Model.Symptoms ?? "Not recorded")</p>
         <h5 class="fw-bold">Visit summary</h5>
         <p class="mb-0" style="white-space: pre-wrap">@Model.Summary</p>
+        <hr/><h5 class="fw-bold">Treatment and follow-up</h5><p>@(Model.TreatmentNotes ?? "Not recorded")</p><p>@(Model.FollowUpNotes ?? "Not recorded")</p>
     </div>
 </div>

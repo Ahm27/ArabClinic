@@ -21,6 +21,12 @@ public sealed class CreateMedicalVisitViewModel
     [Required, StringLength(4000)]
     public string Summary { get; set; } = string.Empty;
 
+    [Required, StringLength(500)]
+    public string Diagnosis { get; set; } = string.Empty;
+    [StringLength(1000)] public string? Symptoms { get; set; }
+    [StringLength(2000)] public string? TreatmentNotes { get; set; }
+    [StringLength(2000)] public string? FollowUpNotes { get; set; }
+
     public IReadOnlyList<SelectListItem> PatientOptions { get; set; } = [];
     public IReadOnlyList<SelectListItem> DoctorOptions { get; set; } = [];
 }

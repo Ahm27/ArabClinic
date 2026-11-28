@@ -38,6 +38,10 @@ public sealed class HomeController(
         return View();
     }
 
+    public IActionResult Terms() => View();
+
+    public IActionResult Privacy() => View();
+
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {

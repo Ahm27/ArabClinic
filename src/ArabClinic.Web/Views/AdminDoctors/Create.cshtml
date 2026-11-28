@@ -1,0 +1,9 @@
+@model DoctorAdminViewModel
+@{ ViewData["Title"] = "Add doctor"; }
+<section class="section"><div class="container"><div class="booking-card"><h1>Add doctor account</h1><form method="post"><div asp-validation-summary="All" class="text-danger"></div><div class="row g-3">
+<div class="col-md-6"><label asp-for="FullName"></label><input asp-for="FullName" class="form-control"/></div><div class="col-md-6"><label asp-for="Email"></label><input asp-for="Email" class="form-control"/></div>
+<div class="col-md-6"><label asp-for="PhoneNumber"></label><input asp-for="PhoneNumber" class="form-control"/></div><div class="col-md-6"><label asp-for="Password">Temporary password</label><input asp-for="Password" class="form-control"/></div>
+<div class="col-md-6"><label asp-for="SpecializationId">Specialization</label><select asp-for="SpecializationId" asp-items="Model.Specializations" class="form-select"></select></div><div class="col-md-6"><label asp-for="ConsultationFee"></label><input asp-for="ConsultationFee" class="form-control"/></div>
+<div class="col-md-6"><label asp-for="Location"></label><input asp-for="Location" class="form-control"/></div><div class="col-md-6"><label asp-for="SlotDurationMinutes">Slot duration</label><select asp-for="SlotDurationMinutes" class="form-select"><option>15</option><option>20</option><option>30</option><option>45</option><option>60</option></select></div>
+<div class="col-12"><button class="btn btn-primary rounded-pill">Create doctor</button></div></div></form></div></div></section>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
