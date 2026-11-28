@@ -47,7 +47,13 @@ public sealed class ArabClinicWebApplicationFactory : WebApplicationFactory<Prog
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.UseEnvironment("Development");
+        builder.UseEnvironment("Testing");
+        // Program registers the production provider before this factory can replace it.
+        // Supply a syntactically valid bootstrap value so CI can construct the host;
+        // no SQL connection is opened because the provider is replaced below.
+        builder.UseSetting(
+            "ConnectionStrings:ArabClinic",
+            "Server=localhost;Database=ArabClinicTests;Integrated Security=True;TrustServerCertificate=True");
         builder.ConfigureServices(services =>
         {
             services.RemoveAll<DbContextOptions<ArabClinicDbContext>>();

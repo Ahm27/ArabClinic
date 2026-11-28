@@ -1,0 +1,411 @@
+name: Build, Test, and Deploy
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, dev]
+    tags: ['v*.*.*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: arabclinic-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  PUBLISH_DIR: ${{ github.workspace }}/artifacts/publish
+  LOG_DIR: ${{ github.workspace }}/artifacts/logs
+  SITE_BASE_URL: ${{ vars.SITE_BASE_URL || 'http://arabclinic.somee.com' }}
+
+jobs:
+  build-test-publish:
+    name: Build, test, and create deployment package
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Prepare diagnostic directories
+        shell: bash
+        run: mkdir -p "$LOG_DIR" TestResults
+
+      - name: Restore locked dependencies
+        id: restore
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          trap 'echo "::error title=Dependency restore failed::Command failed at line $LINENO: $BASH_COMMAND"' ERR
+          echo "::group::dotnet restore"
+          dotnet restore ArabClinic.sln --locked-mode 2>&1 | tee "$LOG_DIR/restore.log"
+          echo "::endgroup::"
+
+      - name: Verify code formatting
+        id: format
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          trap 'echo "::error title=Formatting check failed::Run dotnet format ArabClinic.sln locally and commit the result."' ERR
+          dotnet format ArabClinic.sln --no-restore --verify-no-changes --verbosity diagnostic \
+            2>&1 | tee "$LOG_DIR/format.log"
+
+      - name: Build solution
+        id: build
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          trap 'echo "::error title=Release build failed::Review artifacts/logs/build.log for the compiler error."' ERR
+          dotnet build ArabClinic.sln --configuration Release --no-restore \
+            --property:ContinuousIntegrationBuild=true \
+            2>&1 | tee "$LOG_DIR/build.log"
+
+      - name: Run automated tests
+        id: tests
+        shell: bash
+        env:
+          ASPNETCORE_ENVIRONMENT: Testing
+        run: |
+          set -Eeuo pipefail
+          trap 'echo "::error title=Automated tests failed::Download pipeline-diagnostics and inspect test.log or the TRX report."' ERR
+          dotnet test ArabClinic.sln \
+            --configuration Release \
+            --no-build \
+            --no-restore \
+            --logger "trx;LogFileName=test-results.trx" \
+            --collect "XPlat Code Coverage" \
+            --results-directory TestResults \
+            2>&1 | tee "$LOG_DIR/test.log"
+
+      - name: Verify EF migration model
+        id: migrations
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          trap 'echo "::error title=Pending EF model changes::Create and commit a migration before deploying."' ERR
+          dotnet ef migrations has-pending-model-changes \
+            --project src/ArabClinic.Infrastructure \
+            --startup-project src/ArabClinic.Web \
+            --configuration Release \
+            --no-build \
+            2>&1 | tee "$LOG_DIR/migrations.log"
+
+      - name: Publish MVC application
+        id: publish
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          trap 'echo "::error title=Application publish failed::Review artifacts/logs/publish.log."' ERR
+          dotnet publish src/ArabClinic.Web/ArabClinic.Web.csproj \
+            --configuration Release \
+            --no-build \
+            --no-restore \
+            --output "$PUBLISH_DIR" \
+            2>&1 | tee "$LOG_DIR/publish.log"
+          rm -f "$PUBLISH_DIR/appsettings.Development.json"
+
+      - name: Validate deployment package
+        id: package
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          trap 'echo "::error title=Invalid deployment package::A required IIS publish file is missing or invalid."' ERR
+
+          required_files=(
+            "$PUBLISH_DIR/web.config"
+            "$PUBLISH_DIR/ArabClinic.Web.dll"
+            "$PUBLISH_DIR/ArabClinic.Web.deps.json"
+            "$PUBLISH_DIR/ArabClinic.Web.runtimeconfig.json"
+            "$PUBLISH_DIR/wwwroot/assets/css/main.css"
+          )
+
+          for required_file in "${required_files[@]}"; do
+            if [[ ! -f "$required_file" ]]; then
+              echo "::error file=$required_file::Required publish output is missing."
+              exit 1
+            fi
+          done
+
+          if [[ -f "$PUBLISH_DIR/appsettings.Development.json" ]]; then
+            echo "::error::Development configuration must not be deployed."
+            exit 1
+          fi
+
+          grep -Eq '(^|[[:space:]])[:.#@a-zA-Z][^{]*\{' \
+            "$PUBLISH_DIR/wwwroot/assets/css/main.css"
+          find "$PUBLISH_DIR" -maxdepth 2 -type f -printf '%P\n' | sort | tee "$LOG_DIR/package-files.log"
+          du -sh "$PUBLISH_DIR" | tee -a "$LOG_DIR/package-files.log"
+
+      - name: Upload deployment package
+        uses: actions/upload-artifact@v4
+        with:
+          name: arabclinic-publish-${{ github.sha }}
+          path: ${{ env.PUBLISH_DIR }}/
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 6
+
+      - name: Upload test reports and diagnostic logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pipeline-diagnostics-${{ github.sha }}
+          path: |
+            artifacts/logs/
+            TestResults/
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Write build summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Build and test summary"
+            echo "| Stage | Result |"
+            echo "|---|---|"
+            echo "| Restore | ${{ steps.restore.outcome }} |"
+            echo "| Format | ${{ steps.format.outcome }} |"
+            echo "| Build | ${{ steps.build.outcome }} |"
+            echo "| Tests | ${{ steps.tests.outcome }} |"
+            echo "| EF migrations | ${{ steps.migrations.outcome }} |"
+            echo "| Publish | ${{ steps.publish.outcome }} |"
+            echo "| Package validation | ${{ steps.package.outcome }} |"
+            echo
+            echo "Download **pipeline-diagnostics-${{ github.sha }}** for complete logs and test reports."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  deploy-somee:
+    name: Deploy verified package to Somee
+    needs: build-test-publish
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: production
+      url: ${{ vars.SITE_BASE_URL || 'http://arabclinic.somee.com' }}
+
+    steps:
+      - name: Download verified deployment package
+        uses: actions/download-artifact@v4
+        with:
+          name: arabclinic-publish-${{ github.sha }}
+          path: ${{ env.PUBLISH_DIR }}
+
+      - name: Validate deployment configuration
+        id: config
+        shell: bash
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_SERVER_DIR: ${{ secrets.FTP_SERVER_DIR }}
+          FTP_PROTOCOL: ${{ vars.FTP_PROTOCOL || 'ftp' }}
+          FTP_PORT: ${{ vars.FTP_PORT || '21' }}
+        run: |
+          set -Eeuo pipefail
+          fail() { echo "::error title=Invalid deployment configuration::$1"; exit 1; }
+
+          [[ -n "$FTP_SERVER" ]] || fail "Missing repository secret FTP_SERVER."
+          [[ -n "$FTP_USERNAME" ]] || fail "Missing repository secret FTP_USERNAME."
+          [[ -n "$FTP_PASSWORD" ]] || fail "Missing repository secret FTP_PASSWORD."
+          [[ -n "$FTP_SERVER_DIR" ]] || fail "Missing repository secret FTP_SERVER_DIR."
+          [[ "$FTP_PROTOCOL" =~ ^(ftp|ftps-explicit|ftps-implicit)$ ]] || \
+            fail "FTP_PROTOCOL must be ftp, ftps-explicit, or ftps-implicit."
+          [[ "$FTP_PORT" =~ ^[0-9]+$ ]] || fail "FTP_PORT must be numeric."
+          [[ "$FTP_SERVER_DIR" =~ ^[A-Za-z0-9_./-]+$ ]] || \
+            fail "FTP_SERVER_DIR contains unsupported characters."
+          [[ "$FTP_SERVER_DIR" != *".."* ]] || \
+            fail "FTP_SERVER_DIR must not contain parent-directory traversal."
+
+          echo "Protocol: $FTP_PROTOCOL"
+          echo "Port: $FTP_PORT"
+          echo "Remote directory: $FTP_SERVER_DIR"
+
+      - name: Install FTP client
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          trap 'echo "::error title=FTP client installation failed::The runner could not install lftp."' ERR
+          sudo apt-get update -qq
+          sudo apt-get install --yes --no-install-recommends lftp
+
+      - name: Upload application to Somee
+        id: deploy
+        shell: bash
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_SERVER_DIR: ${{ secrets.FTP_SERVER_DIR }}
+          FTP_PROTOCOL: ${{ vars.FTP_PROTOCOL || 'ftp' }}
+          FTP_PORT: ${{ vars.FTP_PORT || '21' }}
+        run: |
+          set -Eeuo pipefail
+          set +x
+          trap 'echo "::error title=FTP deployment failed::Check the FTP host, credentials, protocol, port, and remote directory."' ERR
+
+          case "$FTP_PROTOCOL" in
+            ftp)
+              ftp_url="ftp://$FTP_SERVER"
+              tls_commands=$'set ftp:ssl-allow false\n'
+              ;;
+            ftps-explicit)
+              ftp_url="ftp://$FTP_SERVER"
+              tls_commands=$'set ftp:ssl-force true\nset ftp:ssl-protect-data true\nset ssl:verify-certificate true\n'
+              ;;
+            ftps-implicit)
+              ftp_url="ftps://$FTP_SERVER"
+              tls_commands=$'set ftp:ssl-force true\nset ftp:ssl-protect-data true\nset ssl:verify-certificate true\n'
+              ;;
+          esac
+
+          lftp_run() {
+            local operation="$1"
+            lftp -u "$FTP_USERNAME,$FTP_PASSWORD" -p "$FTP_PORT" "$ftp_url" <<LFTP_COMMANDS
+          set cmd:fail-exit true
+          set net:max-retries 2
+          set net:timeout 20
+          set net:reconnect-interval-base 5
+          $tls_commands
+          cd "$FTP_SERVER_DIR"
+          $operation
+          bye
+          LFTP_COMMANDS
+          }
+
+          offline_file="$RUNNER_TEMP/app_offline.htm"
+          printf '%s\n' '<!doctype html><html><body><h1>ArabClinic is being updated</h1></body></html>' > "$offline_file"
+          offline_uploaded=0
+
+          cleanup() {
+            local status=$?
+            trap - EXIT
+            if [[ "$offline_uploaded" -eq 1 ]]; then
+              lftp_run "rm -f app_offline.htm" || status=1
+            fi
+            exit "$status"
+          }
+          trap cleanup EXIT
+
+          echo "Testing FTP access and remote directory..."
+          lftp_run "pwd; cls -la"
+          echo "Taking the IIS application offline..."
+          lftp_run "put \"$offline_file\" -o app_offline.htm"
+          offline_uploaded=1
+          sleep 3
+          echo "Uploading verified publish output..."
+          lftp_run "mirror --reverse --verbose=1 --parallel=2 --exclude-glob app_offline.htm --exclude-glob appsettings.Development.json --exclude-glob appsettings.Production.json \"$PUBLISH_DIR/\" ."
+          lftp_run "rm -f app_offline.htm"
+          offline_uploaded=0
+          trap - EXIT
+          echo "Deployment upload completed."
+
+      - name: Verify deployed application
+        id: verify
+        shell: bash
+        env:
+          VERIFY_RETRIES: ${{ vars.DEPLOY_VERIFY_RETRIES || '12' }}
+          VERIFY_DELAY_SECONDS: ${{ vars.DEPLOY_VERIFY_DELAY_SECONDS || '10' }}
+        run: |
+          set -Eeuo pipefail
+          health_url="${SITE_BASE_URL%/}/health"
+          css_url="${SITE_BASE_URL%/}/assets/css/main.css"
+
+          for attempt in $(seq 1 "$VERIFY_RETRIES"); do
+            health_status=$(curl --silent --show-error --location --connect-timeout 10 \
+              --max-time 30 --output "$RUNNER_TEMP/health.txt" --write-out '%{http_code}' \
+              "$health_url" || true)
+            css_status=$(curl --silent --show-error --location --connect-timeout 10 \
+              --max-time 30 --output "$RUNNER_TEMP/main.css" --write-out '%{http_code}' \
+              "$css_url" || true)
+
+            echo "Attempt $attempt/$VERIFY_RETRIES: health=$health_status css=$css_status"
+            if [[ "$health_status" == "200" && "$css_status" == "200" ]] \
+              && grep -Eq '(^|[[:space:]])[:.#@a-zA-Z][^{]*\{' "$RUNNER_TEMP/main.css"; then
+              echo "Deployment verification succeeded: $SITE_BASE_URL"
+              exit 0
+            fi
+
+            [[ "$attempt" -eq "$VERIFY_RETRIES" ]] || sleep "$VERIFY_DELAY_SECONDS"
+          done
+
+          echo "::error title=Post-deployment verification failed::Health or static CSS did not return valid HTTP 200 responses from $SITE_BASE_URL."
+          echo "Health response preview:"
+          head -c 500 "$RUNNER_TEMP/health.txt" || true
+          exit 1
+
+      - name: Write deployment summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Somee deployment summary"
+            echo "| Stage | Result |"
+            echo "|---|---|"
+            echo "| Configuration | ${{ steps.config.outcome }} |"
+            echo "| FTP upload | ${{ steps.deploy.outcome }} |"
+            echo "| HTTP verification | ${{ steps.verify.outcome }} |"
+            echo
+            echo "Target: $SITE_BASE_URL"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  publish-container:
+    name: Publish container image
+    needs: build-test-publish
+    if: >-
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=sha,prefix=sha-
+
+      - name: Build and publish image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
