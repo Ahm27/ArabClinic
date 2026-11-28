@@ -224,6 +224,7 @@ jobs:
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
           FTP_SERVER_DIR: ${{ secrets.FTP_SERVER_DIR }}
+          DB_CONNECTION_STRING: ${{ secrets.DB_CONNECTION_STRING }}
           FTP_PROTOCOL: ${{ vars.FTP_PROTOCOL || 'ftp' }}
           FTP_PORT: ${{ vars.FTP_PORT || '21' }}
         run: |
@@ -234,6 +235,7 @@ jobs:
           [[ -n "$FTP_USERNAME" ]] || fail "Missing repository secret FTP_USERNAME."
           [[ -n "$FTP_PASSWORD" ]] || fail "Missing repository secret FTP_PASSWORD."
           [[ -n "$FTP_SERVER_DIR" ]] || fail "Missing repository secret FTP_SERVER_DIR."
+          [[ -n "$DB_CONNECTION_STRING" ]] || fail "Missing repository secret DB_CONNECTION_STRING."
           [[ "$FTP_PROTOCOL" =~ ^(ftp|ftps-explicit|ftps-implicit)$ ]] || \
             fail "FTP_PROTOCOL must be ftp, ftps-explicit, or ftps-implicit."
           [[ "$FTP_PORT" =~ ^[0-9]+$ ]] || fail "FTP_PORT must be numeric."
@@ -245,6 +247,24 @@ jobs:
           echo "Protocol: $FTP_PROTOCOL"
           echo "Port: $FTP_PORT"
           echo "Remote directory: $FTP_SERVER_DIR"
+
+      - name: Create production database configuration
+        id: production-config
+        shell: bash
+        env:
+          DB_CONNECTION_STRING: ${{ secrets.DB_CONNECTION_STRING }}
+        run: |
+          set -Eeuo pipefail
+          set +x
+          trap 'echo "::error title=Production configuration failed::Could not create appsettings.Production.json from DB_CONNECTION_STRING."' ERR
+          umask 077
+          jq --null-input --arg connectionString "$DB_CONNECTION_STRING" \
+            '{ConnectionStrings: {ArabClinic: $connectionString}}' \
+            > "$PUBLISH_DIR/appsettings.Production.json"
+          jq --exit-status \
+            '.ConnectionStrings.ArabClinic | type == "string" and length > 0' \
+            "$PUBLISH_DIR/appsettings.Production.json" > /dev/null
+          echo "Created production configuration without printing secret values."
 
       - name: Install FTP client
         shell: bash
@@ -321,7 +341,7 @@ jobs:
           echo "Uploading verified publish output..."
           # Somee runs IIS on Windows and does not support Unix SITE CHMOD.
           # Keep transfer failures fatal, but do not try to synchronize modes.
-          lftp_run "mirror --reverse --no-perms --verbose=1 --parallel=2 --exclude-glob app_offline.htm --exclude-glob appsettings.Development.json --exclude-glob appsettings.Production.json \"$PUBLISH_DIR/\" ."
+          lftp_run "mirror --reverse --no-perms --verbose=1 --parallel=2 --exclude-glob app_offline.htm --exclude-glob appsettings.Development.json \"$PUBLISH_DIR/\" ."
           lftp_run "rm -f app_offline.htm"
           offline_uploaded=0
           trap - EXIT
@@ -370,6 +390,7 @@ jobs:
             echo "| Stage | Result |"
             echo "|---|---|"
             echo "| Configuration | ${{ steps.config.outcome }} |"
+            echo "| Production settings | ${{ steps.production-config.outcome }} |"
             echo "| FTP upload | ${{ steps.deploy.outcome }} |"
             echo "| HTTP verification | ${{ steps.verify.outcome }} |"
             echo

@@ -137,11 +137,12 @@ a separate release process. Never commit production connection strings or
 admin credentials to this repository.
 
 The Somee workflow additionally requires GitHub repository secrets
-`FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`, and `FTP_SERVER_DIR`. Optional
-repository variables are `FTP_PROTOCOL`, `FTP_PORT`, `SITE_BASE_URL`,
-`DEPLOY_VERIFY_RETRIES`, and `DEPLOY_VERIFY_DELAY_SECONDS`. Configure the
-application settings above in the hosting control panel; the workflow does not
-upload production secrets.
+`FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`, `FTP_SERVER_DIR`, and
+`DB_CONNECTION_STRING`. The deployment job generates
+`appsettings.Production.json` from `DB_CONNECTION_STRING` only after downloading
+the verified package, so the secret is not committed or stored in the retained
+build artifact. Optional repository variables are `FTP_PROTOCOL`, `FTP_PORT`,
+`SITE_BASE_URL`, `DEPLOY_VERIFY_RETRIES`, and `DEPLOY_VERIFY_DELAY_SECONDS`.
 
 ## UI template
 
